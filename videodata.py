@@ -76,9 +76,16 @@ def detect_emotion(face_roi):
     face_rgb = cv2.cvtColor(face_roi, cv2.COLOR_BGR2RGB)
     
     try:
-        # analyze face to detect emotion
-        analysis = DeepFace.analyze(face_rgb, actions=['emotion'], enforce_detection=False)
-        emotion_label = analysis['dominant_emotion']
+        analysis = DeepFace.analyze(
+            img_path=face_rgb,
+            actions=['emotion'],
+            enforce_detection=False,
+        )
+
+        
+        # print(analysis)
+        emotion_label = analysis[0].get('dominant_emotion', "N/A")
+                
     except Exception as e:
         print(f"Emotion detection error: {e}")
         emotion_label = "N/A"
