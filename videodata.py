@@ -4,6 +4,7 @@ import numpy as np
 from imutils import face_utils
 from deepface import DeepFace
 
+
 def main():
     # initialize dlib's face detector (HOG-based) and create the facial landmark predictor
     detector = dlib.get_frontal_face_detector()
@@ -81,7 +82,6 @@ def detect_emotion(face_roi):
             actions=['emotion'],
             enforce_detection=False,
         )
-
         
         # print(analysis)
         emotion_label = analysis[0].get('dominant_emotion', "N/A")
