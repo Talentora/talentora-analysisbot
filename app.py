@@ -9,8 +9,8 @@ def hello_world():
     return "<p>Hello, World!</p>"
 
 
-@app.route("/url", methods=['POST'])
-def data_summarization():
+@app.route("/url", methods=['GET','POST'])
+def text_summarization():
     try:
         #get data from DailyDB
         data = request.get_json()
@@ -27,19 +27,22 @@ def data_summarization():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route("/url", methods=['GET','POST'])
+def video_summarization():
+
+    return None
+
+@app.route("/url", methods=['GET','POST'])
+def audio_summarization():
+    
+    return None
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
     
-
+#fly.io https://fly.io/docs/launch/deploy/
 
 """
-Choose a Hosting Platform:
-
-Platforms like AWS, Google Cloud, Heroku, or Azure offer services tailored for deploying Flask applications.
-Set Up CI/CD Pipelines:
-
-Automate the deployment process to ensure smooth and consistent releases.
-Monitor Performance:
-
-Use monitoring tools (e.g., Prometheus, Grafana) to keep an eye on application performance and uptime.
+Deployment Backend
+https://railway.app/
 """
