@@ -27,7 +27,6 @@ async def main():
             ret, frame = cap.read()
             if not ret:
                 print("Failed to grab frame.")
-                break
 
             # encode frame to jpeg
             success, encoded_image = cv2.imencode('.jpg', frame)

@@ -11,6 +11,7 @@ from hume.expression_measurement.stream.types import StreamFace
 load_dotenv()
 
 async def main():
+    #
     api_key = os.environ.get("HUME_API_KEY")
     if not api_key:
         raise ValueError("API key not found. Please set HUME_API_KEY in your environment variables.")
