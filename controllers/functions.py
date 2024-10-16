@@ -1,23 +1,17 @@
 import os
 from flask import Flask, request, jsonify
+
+# fix package imports
+from video import process_video
 from summarize import dialogue_processing
-
-
-'''
-Current implementation: After interview concludes, the interviee will be taken to a thank you page. 
-This page URL will be the trigger urls to activate the AI model processing functions
-'''
+from audio import process_audio
 
 
 
-app = Flask(__name__)
-
-@app.route("/")
 def hello_world():
     return "<p>Hello, World!</p>"
 
 
-@app.route("/url", methods=['GET','POST'])
 def text_summarization():
     try:
         #get data from DailyDB
@@ -35,22 +29,10 @@ def text_summarization():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route("/url", methods=['GET','POST'])
 def video_summarization():
-
+    process_video()
     return None
 
-@app.route("/url", methods=['GET','POST'])
 def audio_summarization():
-    
+    process_audio()
     return None
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
-    
-#fly.io https://fly.io/docs/launch/deploy/
-
-"""
-Deployment Backend
-https://railway.app/
-"""
