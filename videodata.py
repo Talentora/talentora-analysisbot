@@ -4,8 +4,8 @@ import numpy as np
 from imutils import face_utils
 from deepface import DeepFace
 
-
 def main():
+    emotions = {"angry": 0, "disgust": 0, "fear": 0, "happy": 0, "sad": 0, "surprise": 0, "neutral": 0}
     # initialize dlib's face detector (HOG-based) and create the facial landmark predictor
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor('models/shape_predictor_68_face_landmarks.dat')
@@ -50,6 +50,8 @@ def main():
             face_roi = frame[y:y + h, x:x + w]
             emotion = detect_emotion(face_roi)
             cv2.putText(frame, emotion, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
+            if emotion in emotions:
+                emotions[emotion] += 1
             
             # mouth movement analysis -- example below: 
             # mouth_status = analyze_mouth(shape)
@@ -69,6 +71,7 @@ def main():
             break
 
     # release camera and close windows
+    print(emotions)
     cap.release()
     cv2.destroyAllWindows()
 
