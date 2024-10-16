@@ -1,25 +1,12 @@
 import asyncio
-import os
-from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-from hume import AsyncHumeClient
-from hume.expression_measurement.stream import Config
-from hume.expression_measurement.stream.socket_client import StreamConnectOptions
-from hume.expression_measurement.stream.types import StreamFace
+from configs.hume_config import hume_model
 
-load_dotenv()
 
 async def main():
-    #
-    api_key = os.environ.get("HUME_API_KEY")
-    if not api_key:
-        raise ValueError("API key not found. Please set HUME_API_KEY in your environment variables.")
-    client = AsyncHumeClient(api_key=api_key)
-
-    model_config = Config(face=StreamFace())
-
-    stream_options = StreamConnectOptions(config=model_config)
+    # call the hume_model function to get the client and stream options
+    client, stream_options = hume_model()
     
     async with client.expression_measurement.stream.connect(options=stream_options) as socket:
         image_path = "631a5b3cda08e18ebf63f147_AdobeStock_246344306-scaled.jpeg"
