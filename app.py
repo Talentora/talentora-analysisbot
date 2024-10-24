@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, jsonify
-from services.summarize import dialogue_processing
+from controllers.functions import text_summarization, audio_summarization, video_summarization, interview_score_calculation
 
 
 '''
@@ -16,17 +16,25 @@ app = Flask(__name__)
 def hello_world():
     return "<p>Hello, World!</p>"
 
+@app.route("/url", methods=['GET','POST'])
+def interview_score():
+    interview_score_calculation()
+    pass
+
 #call the functions from controllers file
 #to be updated
 @app.route("/url", methods=['GET','POST'])
-def text_summarization():
+def interview_response_summarization():
+    text_summarization()
     pass
 
 @app.route("/url", methods=['GET','POST'])
-def video_summarization():
+def interview_video_summarization():
+    video_summarization()
     pass
 @app.route("/url", methods=['GET','POST'])
-def audio_summarization():
+def interview_audio_summarization():
+    audio_summarization()
     pass
 
 if __name__ == "__main__":
