@@ -128,7 +128,7 @@ def monitor_job(job_id, interval=10):
 def main():
     # Example URLs to media files (replace with your own URLs)
     media_urls = [
-        "https://hume-tutorials.s3.amazonaws.com/faces.zip"
+        "https://www.dropbox.com/scl/fi/eesz1rkgpxjdl81m9qu51/P7.avi?rlkey=w7ewszrtzf9m64x1yx1ajzobp&st=tsk6loki&dl=0"
     ]
     
     # Example text input
@@ -147,7 +147,7 @@ def main():
     job_id = start_inference_job(
         urls=media_urls,
         models=models,
-        text=text_inputs,
+        #text=text_inputs,
         callback_url=None,  # Optional: specify if you have a callback endpoint
     )
         
