@@ -2,7 +2,6 @@ import time
 import os
 from dotenv import load_dotenv
 from hume import HumeClient
-from hume.expression_measurement.batch.types import Models, Face, Prosody, Language
 
 load_dotenv()
 
@@ -35,14 +34,14 @@ def list_jobs(limit=None, status="IN_PROGRESS", when=None, timestamp_ms=None, so
     except Exception as e:
         print(f"Error listing jobs: {e}")
 
-def start_inference_job(urls, models, transactions=None, text=None, callback_url=None, notify=False):
+def start_inference_job(urls, models, transcriptions=None, text=None, callback_url=None, notify=False):
     """
     Start a new measurement inference job.
     """
     job_payload = {
         "urls": urls,
-        "models": Models(**models),
-        "transactions": transactions,
+        "models": models,
+        "transcription": transcriptions,
         "text": text,
         "callback_url": callback_url,
         "notify": notify
@@ -68,7 +67,6 @@ def get_job_details(job_id):
         job = client.expression_measurement.batch.get_job_details(id=job_id)
         print(f"Job ID: {job.job_id}")
         print(f"Models: {job.request.models}")
-        print(f"Status: {job.state.status}")
         print(f"Type: {job.type}")
         print(f"Created At: {job.state.created_timestamp_ms}")
         print(f"Started At: {job.state.started_timestamp_ms}")
@@ -87,23 +85,26 @@ def get_job_predictions(job_id):
             print(f"Source: {prediction.source}")
             for result in prediction.results.predictions:
                 print(f"  File: {result.file}")
-                print(f"  Models: {result.models}")
-                for face in result.models.face.grouped_predictions:
-                    print(f"    Face ID: {face.id}")
-                    for pred in face.predictions:
-                        print(f"      Frame: {pred.frame}, Time: {pred.time}s, Probability: {pred.prob}")
-                        print(f"      Emotions:")
-                        for emotion in pred.emotions:
-                            print(f"        {emotion.name}: {emotion.score}")
-                # for file_pred in result.get('predictions', []):
-                #     print(f"    File: {file_pred.file}")
-                #     for face in file_pred.models.get('face', {}).get('grouped_predictions', []):
-                #         print(f"      Face ID: {face.id}")
-                #         for pred in face.predictions:
-                #             print(f"        Frame: {pred.frame}, Time: {pred.time}s, Probability: {pred.prob}")
-                #             print(f"        Emotions:")
-                #             for emotion in pred.emotions:
-                #                 print(f"          {emotion.name}: {emotion.score}")
+                if result.models.face:
+                    for face in result.models.face.grouped_predictions:
+                        print(f"    Face ID: {face.id}")
+                        for pred in face.predictions:
+                            print(f"      Frame: {pred.frame}, Time: {pred.time}s, Probability: {pred.prob}")
+                            print(f"      Emotions:")
+                            for emotion in pred.emotions:
+                                print(f"        {emotion.name}: {emotion.score}")
+                if result.models.prosody:
+                    for prosody in result.models.prosody.grouped_predictions:
+                        for pred in prosody.predictions:
+                            print(f"      Time: {pred.time}, Text: {pred.text}, Confidence: {pred.confidence}, Speaker Confidence: {pred.speaker_confidence}")
+                            for emotion in pred.emotions:
+                                print(f"        {emotion.name}: {emotion.score}")
+                if result.models.language:
+                    for pred in result.models.language.grouped_predictions:
+                        for language in pred.predictions:
+                            print(f"      Time: {language.time}, Text: {language.text}, Confidence: {language.confidence}, Speaker Confidence: {language.speaker_confidence}")
+                            for emotion in language.emotions:
+                                print(f"        {emotion.name}: {emotion.score}")
     except Exception as e:
         print(f"Error fetching job predictions: {e}")
 
@@ -138,9 +139,8 @@ def main():
     
     # Specify the models you want to use
     models = {
-        "face": Face(),
-        "prosody": Prosody(),
-        "language": Language()
+        "face": {},
+        "language": {}
     }
     
     # Start a new inference job
@@ -158,6 +158,7 @@ def main():
     monitor_job(job_id)
     
     # Get job details
+    print("Getting job details...")
     get_job_details(job_id)
     
     # If job completed successfully, get predictions
