@@ -165,19 +165,18 @@ def visualize_predictions(predictions):
         fig.write_html('face_emotions_over_time.html')
         fig.show()
         
-def visualize_top_emotions(predictions):
+def visualize_top_emotions(predictions, top_n=5, window_size=3):
     """
-    Create visualizations from the Hume API predictions.
+    Create visualizations for the top N emotions from Hume API predictions with smoothing.
 
     :param predictions: Dictionary containing face, prosody, and language predictions.
+    :param top_n: Number of top emotions to visualize.
+    :param window_size: Window size for moving average smoothing.
     """
     # Convert predictions to DataFrames
     face_df = pd.DataFrame(predictions['face'])
     prosody_df = pd.DataFrame(predictions['prosody'])
     language_df = pd.DataFrame(predictions['language'])
-    
-    print(face_df.head())
-    print(face_df['emotions'].head())
     
     print(face_df.head())
     print(face_df['emotions'].head())
@@ -205,24 +204,85 @@ def visualize_top_emotions(predictions):
         )
 
         # identify the top emotion based on average score
-        top_emotion = face_emotions.groupby('emotion')['score'].mean().idxmax()
-        print(f"Top emotion: {top_emotion}")
+        top_emotions = face_emotions.groupby('emotion')['score'].mean().nlargest(top_n).index.tolist()
+        print(f"Top {top_n} emotions: {top_emotions}")
 
-        top_face_emotions = face_emotions[face_emotions['emotion'] == top_emotion]
-
+        top_face_emotions = face_emotions[face_emotions['emotion'].isin(top_emotions)]
+        
         # sort the data by time
         top_face_emotions = top_face_emotions.sort_values(by='time')
+        
+        top_face_emotions['smoothed_score'] = top_face_emotions.groupby('emotion')['score'].transform(
+            lambda x: x.rolling(window=window_size, min_periods=1).mean()
+        )
 
-        plt.figure(figsize=(12, 6))
-        sns.lineplot(data=top_face_emotions, x='time', y='score', marker='o')
-        plt.title(f'Top Emotion Over Time: {top_emotion.capitalize()}')
+        plt.figure(figsize=(14, 8))
+        sns.lineplot(
+            data=top_face_emotions, 
+            x='time', 
+            y='smoothed_score', 
+            hue='emotion',
+            marker='o'
+        )
+        plt.title(f'Top {top_n} Emotions Over Time (Smoothed)')
         plt.xlabel('Time (s)')
-        plt.ylabel('Emotion Score')
+        plt.ylabel('Emotion Score (Smoothed)')
+        plt.legend(title='Emotion')
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig('top_emotion_over_time.png')
+        plt.savefig('top_emotions_over_time_smoothed.png')
         plt.show()
 
+def visualize_top_emotions_interactive(predictions, top_n=5, window_size=3):
+    """
+    Create interactive visualizations for the top N emotions with smoothing using Plotly.
+
+    :param predictions: Dictionary containing face, prosody, and language predictions.
+    :param top_n: Number of top emotions to visualize.
+    :param window_size: Window size for moving average smoothing.
+    """
+    # Convert predictions to DataFrames
+    face_df = pd.DataFrame(predictions['face'])
+    prosody_df = pd.DataFrame(predictions['prosody'])
+    language_df = pd.DataFrame(predictions['language'])
+
+    if not face_df.empty:
+        face_emotions = face_df[['time', 'emotions']].copy()
+        face_emotions = face_emotions[face_emotions['emotions'].apply(lambda x: isinstance(x, dict))]
+        emotions_normalized = pd.json_normalize(face_emotions['emotions'])
+        face_emotions = pd.concat([
+            face_emotions.drop(['emotions'], axis=1).reset_index(drop=True),
+            emotions_normalized.reset_index(drop=True)
+        ], axis=1)
+        face_emotions = face_emotions.melt(
+            id_vars=['time'], 
+            var_name='emotion', 
+            value_name='score'
+        )
+        top_emotions = face_emotions.groupby('emotion')['score'].mean().nlargest(top_n).index.tolist()
+        top_face_emotions = face_emotions[face_emotions['emotion'].isin(top_emotions)]
+        top_face_emotions = top_face_emotions.sort_values(by='time')
+        top_face_emotions['smoothed_score'] = top_face_emotions.groupby('emotion')['score'].transform(
+            lambda x: x.rolling(window=window_size, min_periods=1).mean()
+        )
+
+        # Create interactive plot
+        fig = px.line(
+            top_face_emotions, 
+            x='time', 
+            y='smoothed_score', 
+            color='emotion',
+            markers=True,
+            title=f'Top {top_n} Emotions Over Time (Smoothed)'
+        )
+        fig.update_layout(
+            xaxis_title='Time (s)',
+            yaxis_title='Emotion Score (Smoothed)',
+            legend_title='Emotion',
+            template='plotly_white'
+        )
+        fig.write_html('top_emotions_over_time_smoothed.html')
+        fig.show()
 
 
 def annotate_video(video_path, face_predictions, output_path='annotated_video.avi'):
@@ -455,14 +515,14 @@ def main():
             with open('predictions.json', 'w') as f:
                 json.dump(predictions, f, indent=4)
             # Proceed to visualize
-            visualize_top_emotions(predictions)
+            visualize_top_emotions_interactive(predictions, window_size=50)
             
             # Annotate the video
-            video_url = media_urls[0]
-            # Download the video locally
-            local_video_path = download_video(video_url)
-            if local_video_path:
-                annotate_video(local_video_path, predictions['face'])
+            # video_url = media_urls[0]
+            # # Download the video locally
+            # local_video_path = download_video(video_url)
+            # if local_video_path:
+            #     annotate_video(local_video_path, predictions['face'])
         else:
             print("No predictions available.")
     else:
