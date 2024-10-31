@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, jsonify
-from summarize import dialogue_processing
+from controllers.functions import text_summarization, audio_summarization, video_summarization, interview_score_calculation
 
 
 '''
@@ -16,34 +16,26 @@ app = Flask(__name__)
 def hello_world():
     return "<p>Hello, World!</p>"
 
+@app.route("/url", methods=['GET','POST'])
+def interview_score():
+    interview_score_calculation()
+    pass
+
+#call the functions from controllers file
+#to be updated
+@app.route("/url", methods=['GET','POST'])
+def interview_response_summarization():
+    text_summarization()
+    pass
 
 @app.route("/url", methods=['GET','POST'])
-def text_summarization():
-    try:
-        #get data from DailyDB
-        data = request.get_json()
-        if not data or 'dialogue' not in data:
-            return jsonify({'error': 'Invalid input data'}), 400
-        dialogue = data['dialogue']
-        
-        # Summarization
-        summarized_dialogue = dialogue_processing(dialogue)
-        
-        # Return summarized data to superbase
-        return jsonify({'summarized_dialogue': summarized_dialogue}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
+def interview_video_summarization():
+    video_summarization()
+    pass
 @app.route("/url", methods=['GET','POST'])
-def video_summarization():
-
-    return None
-
-@app.route("/url", methods=['GET','POST'])
-def audio_summarization():
-    
-    return None
+def interview_audio_summarization():
+    audio_summarization()
+    pass
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
