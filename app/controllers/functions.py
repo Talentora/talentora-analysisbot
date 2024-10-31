@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify
 
-from services.video import process_video
-from services.summarize import dialogue_processing
-from services.audio import process_audio
-from services.evaluation_calculation import evaluation
-from supabase_db import insert_supabase_data
+from app.services.video import process_video
+from app.services.summarize import dialogue_processing
+from app.services.audio import process_audio
+from app.services.evaluation_calculation import evaluation
+
+from app.controllers.supabase_db import insert_supabase_data
 from dailyDB import get_dailydb_data
 
 def interview_evaluation():
