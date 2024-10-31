@@ -1,30 +1,35 @@
-import os
 from flask import Flask, request, jsonify
 
-# fix package imports
-from video import process_video
-from summarize import dialogue_processing
-from audio import process_audio
+from services.video import process_video
+from services.summarize import dialogue_processing
+from services.audio import process_audio
+from services.evaluation_calculation import evaluation
+from supabase_db import insert_supabase_data
+from dailyDB import get_dailydb_data
 
+def interview_evaluation():
+    try:
+        interview_eval = evaluation() #interview result. would call function from services file
+        table = ""
+        result = insert_supabase_data(table,interview_eval)
 
-
-def hello_world():
-    return "<p>Hello, World!</p>"
+        return jsonify({'result': result}), 200
+    
+    except Exception as e:
+         return jsonify({'error': str(e)}), 500
 
 
 def text_summarization():
     try:
         #get data from DailyDB
-        data = request.get_json()
-        if not data or 'dialogue' not in data:
-            return jsonify({'error': 'Invalid input data'}), 400
-        dialogue = data['dialogue']
+        dialogue = get_dailydb_data()
         
         # Summarization
         summarized_dialogue = dialogue_processing(dialogue)
+        result = insert_supabase_data({"summarized_dialogue": summarized_dialogue})
         
         # Return summarized data to superbase
-        return jsonify({'summarized_dialogue': summarized_dialogue}), 200
+        return jsonify({'result': result}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
