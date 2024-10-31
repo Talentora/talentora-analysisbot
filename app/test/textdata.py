@@ -1,4 +1,4 @@
-from summarize import dialogue_processing
+from app.services.summarize import dialogue_processing
 
 
 #get json type text data first
