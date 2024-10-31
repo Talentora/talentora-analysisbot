@@ -13,17 +13,17 @@ def total_speech(text_raw):
         speech_script += " "
     return speech_script
 
-def text_evaluation(text_raw):
+def text_evaluation(text_raw, min_qual, preferred_qual):
     speech_script = total_speech(text_raw)
     result = {
-        'minimum_qualification': minimum_qualification(speech_script),
-        'preferred_qualification': preferred_qualification(speech_script),
+        'minimum_qualification': minimum_qualification(speech_script, min_qual),
+        'preferred_qualification': preferred_qualification(speech_script, preferred_qual),
         'answer_quality': answer_quality(speech_script)
     }
     return result
 
-def minimum_qualification(text):
-    min_qual = ["No"] * 5  # Assuming a max of 5 qualifications
+def minimum_qualification(text, min_qual): #min_qual is a list whose elements are string
+    result = ["No"] * 5  # Assuming a max of 5 qualifications
 
     for i in range(len(min_qual)):
         response = openai.ChatCompletion.create(
@@ -34,14 +34,13 @@ def minimum_qualification(text):
             ]
         )
         answer = response['choices'][0]['message']['content'].strip().lower()
-        min_qual[i] = "Yes" if "yes" in answer else "No"
+        result[i] = "Yes" if "yes" in answer else "No"
 
-    result = min_qual
     return result
 
-def preferred_qualification(text):
+def preferred_qualification(text, preferred_qual):
     #max 5
-    preferred_qual = ["No"] * 5  # Assuming a max of 5 qualifications
+    result = ["No"] * 5  # Assuming a max of 5 qualifications
 
     for i in range(len(preferred_qual)):
         response = openai.ChatCompletion.create(
@@ -52,9 +51,7 @@ def preferred_qualification(text):
             ]
         )
         answer = response['choices'][0]['message']['content'].strip().lower()
-        preferred_qual[i] = "Yes" if "yes" in answer else "No"
-
-    result = preferred_qual
+        result[i] = "Yes" if "yes" in answer else "No"
     return result
 
 def answer_quality(text):
