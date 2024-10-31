@@ -3,15 +3,15 @@ from flask import Flask, request, jsonify
 from services.video import process_video
 from services.summarize import dialogue_processing
 from services.audio import process_audio
-from services.score_calculation import score
-from supabase import insert_supabase_data
+from services.evaluation_calculation import evaluation
+from supabase_db import insert_supabase_data
 from dailyDB import get_dailydb_data
 
-def interview_score_calculation():
+def interview_evaluation():
     try:
-        interview_score = score() #interview result. would call function from services file
+        interview_eval = evaluation() #interview result. would call function from services file
         table = ""
-        result = insert_supabase_data(table,interview_score)
+        result = insert_supabase_data(table,interview_eval)
 
         return jsonify({'result': result}), 200
     
