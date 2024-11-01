@@ -3,3 +3,6 @@
 [phases.setup]
 aptPkgs = ["libsm6", "ffmpeg", "libxext6", "libgl1-mesa-glx", "libportaudio2", "portaudio19-dev"]   
 python_version = "3.11"
+
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
