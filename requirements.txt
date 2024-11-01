@@ -35,4 +35,4 @@ transformers
 flask_cors
 gunicorn
 tensorflow
-pytorch
+torch
