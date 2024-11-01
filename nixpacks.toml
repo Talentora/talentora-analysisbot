@@ -3,6 +3,3 @@
 [phases.setup]
 aptPkgs = ["libsm6", "ffmpeg", "libxext6", "libgl1-mesa-glx"]   
 python_version = "3.11"
-
-[phases.build]
-cmds = ["apt-get update && apt-get install ffmpeg libsm6 libxext6  -y"]
