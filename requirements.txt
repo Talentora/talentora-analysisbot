@@ -31,5 +31,6 @@ sounddevice==0.3.7
 typing_extensions==4.12.2
 websockets==12.0
 flask
+transformers
 flask_cors
 gunicorn
