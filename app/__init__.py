@@ -11,7 +11,7 @@ def create_app(Test=False) -> Flask:
     CORS(app, resources={r"/*": {"origins": "*"}})
 
     @app.route("/")
-    def hello_world():
+    def health_check():
         return "<p>Hello, World!</p>"
 
     @app.route("/url", methods=['GET','POST'])
