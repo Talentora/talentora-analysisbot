@@ -1,7 +1,7 @@
 # nixpacks.toml
 
 [phases.setup]
-aptPkgs = ["libsm6", "ffmpeg", "libxext6", "libgl1-mesa-glx", "libportaudio2", "portaudio19-dev"]   
+aptPkgs = ["libsm6", "ffmpeg", "libxext6", "libgl1-mesa-glx", "libportaudio2", "portaudio19-dev", "python3"]   
 python_version = "3.11"
 
 [phases.install]
