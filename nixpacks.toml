@@ -1,6 +1,5 @@
 # nixpacks.toml
 
 [phases.setup]
-nixPkgs = ["libasound2-dev", "libgl1", "libglib2.0-0", "python3", "gcc"]
-
+apt_pkgs = ["libasound2-dev", "libgl1", "libglib2.0-0", "gcc"]
 python_version = "3.11"
