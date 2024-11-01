@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 
-from app.services.sentiment_analysis import analyze
+# from app.services.sentiment_analysis import analyze
 from app.services.summarize import dialogue_processing
 from app.services.audio import process_audio
 # from app.services.evaluation_calculation import evaluation
@@ -37,7 +37,8 @@ def text_summarization():
 
 
 def video_summarization():
-    analyze()
+    pass
+    # analyze()
     return None
 
 def audio_summarization():
