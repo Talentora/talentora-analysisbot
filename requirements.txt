@@ -15,8 +15,7 @@ idna==3.10
 kiwisolver==1.4.7
 matplotlib==3.9.2
 numpy==2.1.2
-# opencv-python==4.10.0.84
-opencv-contrib-python
+opencv-python-headless
 packaging==24.1
 pillow==11.0.0
 pycparser==2.22
