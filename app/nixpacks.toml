@@ -1,3 +1,2 @@
 [phases.setup]
-apt_pkgs = ["libasound2-dev", "libgl1", "libglib2.0-0"]
 python_version = "3.11"
