@@ -1,7 +1,7 @@
 import time
 import os
 from dotenv import load_dotenv
-from hume import HumeClient
+from hume.client import HumeClient
 
 load_dotenv()
 
