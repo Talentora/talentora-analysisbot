@@ -5,4 +5,5 @@ aptPkgs = ["libsm6", "ffmpeg", "libxext6", "libgl1-mesa-glx", "libportaudio2", "
 python_version = "3.11"
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = ["python3 -m ensurepip --upgrade && \
+    pip install -r requirements.txt"]
