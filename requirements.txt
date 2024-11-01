@@ -35,4 +35,4 @@ transformers
 flask_cors
 gunicorn
 tensorflow
-pytorch==1.10.0
+pytorch
