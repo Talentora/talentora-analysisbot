@@ -1,5 +1,4 @@
 import os
-from app.services.supabase import create_client, Client
 
 class supabase():
 
