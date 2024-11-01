@@ -5,8 +5,11 @@ from app.services.summarize import dialogue_processing
 from app.services.audio import process_audio
 # from app.services.evaluation_calculation import evaluation
 
-from app.controllers.supabase_db import insert_supabase_data
+import app.services.supabase as supabase
 from dailyDB import get_dailydb_data
+
+
+supabase_client = supabase()
 
 def interview_evaluation():
     pass
@@ -28,7 +31,7 @@ def text_summarization():
         
         # Summarization
         summarized_dialogue = dialogue_processing(dialogue)
-        result = insert_supabase_data({"summarized_dialogue": summarized_dialogue})
+        result = supabase_client.insert_supabase_data({"summarized_dialogue": summarized_dialogue})
         
         # Return summarized data to superbase
         return jsonify({'result': result}), 200
