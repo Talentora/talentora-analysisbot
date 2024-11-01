@@ -34,5 +34,5 @@ flask
 transformers
 flask_cors
 gunicorn
-TensorFlow==2.0
+tensorflow
 PyTorch
