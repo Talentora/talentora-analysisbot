@@ -7,7 +7,7 @@ from app.services import *
 bp = Blueprint('scores', __name__)
 CORS(bp)
 
-@app.route("/url", methods=['GET','POST'])
+@bp.route("/url", methods=['GET','POST'])
 @cross_origin
 def interview_score():
     pass
