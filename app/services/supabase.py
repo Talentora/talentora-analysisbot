@@ -5,8 +5,8 @@ class supabase():
     def __init__(self):
         self.url: str = os.environ.get("SUPABASE_URL")
         self.key: str = os.environ.get("SUPABASE_KEY")
-        self.supabase: Client = create_client(self.url, self.key)
-        pass
+        # self.supabase: Client = create_client(self.url, self.key)
+        
 
     #fetch
     def get_supabase_data(self, table, select_target):
