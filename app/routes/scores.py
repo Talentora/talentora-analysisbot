@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify
 from ..utils import *
 from flask_cors import cross_origin, CORS
 from app.services import *
-from app.controllers.functions import *
 
 
 bp = Blueprint('scores', __name__)

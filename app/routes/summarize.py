@@ -2,8 +2,11 @@ from flask import Blueprint
 from ..utils import *
 from flask_cors import cross_origin, CORS
 from app.services import *
-from app.controllers.functions import text_summarization, audio_summarization, video_summarization
 import app.services.supabase as supabase
+from dailyDB import get_dailydb_data
+from app.services.summarize import dialogue_processing
+from app.services.audio import process_audio
+# from app.services.sentiment_analysis import analyze
 
 supabase_client = supabase()
 bp = Blueprint('summarize', __name__)
@@ -16,7 +19,6 @@ CORS(bp)
 @cross_origin
 def interview_response_summarization():
     def text_summarization():
-        return None
         try:
             #get data from DailyDB
             dialogue = get_dailydb_data()
@@ -34,13 +36,12 @@ def interview_response_summarization():
 @app.route("/url", methods=['GET','POST'])
 @cross_origin
 def interview_video_summarization():
-    video_summarization()
-    pass
+    # analyze()
+    return None
 
 
 @app.route("/url", methods=['GET','POST'])
 @cross_origin
 def interview_audio_summarization():
-    audio_summarization()
-    pass
-    
+    process_audio()
+    return None    
