@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_cors import CORS
-from app.controllers.functions import text_summarization, audio_summarization, video_summarization, interview_score_calculation
 from .routes import *
 
 def create_app(Test=False) -> Flask:
