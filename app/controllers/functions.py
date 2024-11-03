@@ -32,6 +32,7 @@ def text_summarization():
         return jsonify({'result': result}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
 
 
 def video_summarization():
