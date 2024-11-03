@@ -1,7 +1,7 @@
 import time
 import os
 from dotenv import load_dotenv
-from hume.client import HumeClient
+from hume import HumeClient
 
 load_dotenv()
 
@@ -295,20 +295,5 @@ def main():
     # List recent jobs
     list_jobs(limit=5)
 
-
-def main():
-    media_urls = [
-        "https://www.dropbox.com/scl/fi/eesz1rkgpxjdl81m9qu51/P7.avi?rlkey=w7ewszrtzf9m64x1yx1ajzobp&st=tsk6loki&dl=0"
-    ]
-
-    models = {
-        "face": {},
-        "language": {}
-    }
-
-    analyze(media_urls=media_urls, models=models)
-
-
-
-
-
+if __name__ == "__main__":
+    main()
