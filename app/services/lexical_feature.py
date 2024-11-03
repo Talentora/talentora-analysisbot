@@ -6,6 +6,8 @@ from nltk.tokenize import word_tokenize
 import spacy
 import openai
 
+
+
 def total_speech(text_raw):
     speech_script = ""
     for answer in text_raw:
@@ -13,51 +15,79 @@ def total_speech(text_raw):
         speech_script += " "
     return speech_script
 
-def text_evaluation(text_raw, min_qual, preferred_qual):
+def text_evaluation(text_raw, questions, min_qual, preferred_qual):
     speech_script = total_speech(text_raw)
     result = {
-        'minimum_qualification': minimum_qualification(speech_script, min_qual),
-        'preferred_qualification': preferred_qualification(speech_script, preferred_qual),
-        'answer_quality': answer_quality(speech_script)
+        'minimum_qualification': minimum_qualification(speech_script, questions, min_qual),
+        'preferred_qualification': preferred_qualification(speech_script, questions, preferred_qual)
     }
     return result
 
-def minimum_qualification(text, min_qual): #min_qual is a list whose elements are string
-    result = ["No"] * 5  # Assuming a max of 5 qualifications
+def minimum_qualification(text, questions, min_qual): #min_qual is a list whose elements are string
+    result = [0] * len(min_qual)
 
-    for i in range(len(min_qual)):
+    questions_text = "\n".join([f"Q{i+1}: {question}" for i, question in enumerate(questions)])
+
+    for i, qualification in enumerate(min_qual):
+        # Include the questions, interview transcript, and specific qualification
+        prompt = (
+            "You are an assistant assessing qualifications of an interviewee based on their answers.\n\n"
+            f"Questions asked during the interview:\n{questions_text}\n\n"
+            f"Transcript:\n{text}\n\n"
+            f"Evaluate the interviewee's qualification for: '{qualification}'.\n"
+            "Provide a score from 1 to 10 based on how well they meet this qualification."
+        )
+
         response = openai.ChatCompletion.create(
             model="gpt-3.5",
             messages=[
-                {"role": "system", "content": "You are an assistant assessing qualifications of interviewee."},
-                {"role": "user", "content": f"In the interview script, does this person mention content aligned with qualification {i+1}? Answer yes or no. Text: {text}"}
+                {"role": "system", "content": "You are an assistant assessing interview responses."},
+                {"role": "user", "content": prompt}
             ]
         )
-        answer = response['choices'][0]['message']['content'].strip().lower()
-        result[i] = "Yes" if "yes" in answer else "No"
 
-    return result
+    #parsing
+    answer = response['choices'][0]['message']['content'].strip()
+    try:
+        score = int(answer)
+        result[i] = min(max(score, 1), 10)  # Ensure score is within 1 to 10 range
+    except ValueError:
+        result[i] = 0  # Default to 0 if score could not be parsed
 
-def preferred_qualification(text, preferred_qual):
-    #max 5
-    result = ["No"] * 5  # Assuming a max of 5 qualifications
 
-    for i in range(len(preferred_qual)):
+def preferred_qualification(text, questions, preferred_qual):
+    result = [0] * len(preferred_qual)
+
+    questions_text = "\n".join([f"Q{i+1}: {question}" for i, question in enumerate(questions)])
+
+    for i, qualification in enumerate(preferred_qual):
+        # Include the questions, interview transcript, and specific preferred qualification
+        prompt = (
+            "You are an assistant assessing the preferred qualifications of an interviewee based on their responses.\n\n"
+            f"Questions asked during the interview:\n{questions_text}\n\n"
+            f"Transcript:\n{text}\n\n"
+            f"Evaluate the interviewee's alignment with the preferred qualification: '{qualification}'.\n"
+            "Provide a score from 1 to 10 based on how well they meet this qualification."
+        )
+
         response = openai.ChatCompletion.create(
             model="gpt-3.5",
             messages=[
-                {"role": "system", "content": "You are an assistant assessing qualifications of interviewee."},
-                {"role": "user", "content": f"In the interview script, does this person mention content aligned with preferred qualification {i+1}? Answer yes or no. Text: {text}"}
+                {"role": "system", "content": "You are an assistant assessing interview responses."},
+                {"role": "user", "content": prompt}
             ]
         )
-        answer = response['choices'][0]['message']['content'].strip().lower()
-        result[i] = "Yes" if "yes" in answer else "No"
+
+        # Parse
+        answer = response['choices'][0]['message']['content'].strip()
+        try:
+            score = int(answer) 
+            result[i] = min(max(score, 1), 10)  # Ensure score is within 1 to 10 range
+        except ValueError:
+            result[i] = 0  # Default to 0 if score could not be parsed
+
     return result
 
-def answer_quality(text):
-    result = []
-    #descriptive, coherent
-    return result
 
 
 
