@@ -1,4 +1,4 @@
-import video
+import app.services.video as video
 import audio
 import summarize
 
