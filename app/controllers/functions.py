@@ -1,22 +1,24 @@
 from flask import Flask, request, jsonify
 
-from services.video import process_video
-from services.summarize import dialogue_processing
-from services.audio import process_audio
-from services.evaluation_calculation import evaluation
-from supabase_db import insert_supabase_data
+from app.services.sentiment_analysis import analyze
+from app.services.summarize import dialogue_processing
+from app.services.audio import process_audio
+# from app.services.evaluation_calculation import evaluation
+
+from app.controllers.supabase_db import insert_supabase_data
 from dailyDB import get_dailydb_data
 
 def interview_evaluation():
-    try:
-        interview_eval = evaluation() #interview result. would call function from services file
-        table = ""
-        result = insert_supabase_data(table,interview_eval)
+    pass
+    # try:
+    #     interview_eval = evaluation() #interview result. would call function from services file
+    #     table = ""
+    #     result = insert_supabase_data(table,interview_eval)
 
-        return jsonify({'result': result}), 200
+    #     return jsonify({'result': result}), 200
     
-    except Exception as e:
-         return jsonify({'error': str(e)}), 500
+    # except Exception as e:
+    #      return jsonify({'error': str(e)}), 500
 
 
 def text_summarization():
@@ -35,7 +37,7 @@ def text_summarization():
 
 
 def video_summarization():
-    process_video()
+    analyze()
     return None
 
 def audio_summarization():

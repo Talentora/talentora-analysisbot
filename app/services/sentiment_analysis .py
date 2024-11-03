@@ -248,6 +248,7 @@ def monitor_job(job_id, interval=10):
             print(f"Error monitoring job: {e}")
             break
 
+<<<<<<< HEAD:app/test/hume_test.py
 def main():
     # Example URLs to media files (replace with your own URLs)
     media_urls = [
@@ -267,11 +268,19 @@ def main():
         "prosody": {}
     }
 
+=======
+def analyze(text_inputs=list(str), models={}, media_urls =""):
+    
+>>>>>>> feature/deploy:app/services/sentiment_analysis .py
     # Start a new inference job
     job_id = start_inference_job(
         urls=media_urls,
         models=models,
+<<<<<<< HEAD:app/test/hume_test.py
         # text=text_inputs,
+=======
+        text=text_inputs,
+>>>>>>> feature/deploy:app/services/sentiment_analysis .py
         callback_url=None,  # Optional: specify if you have a callback endpoint
     )
 
@@ -295,5 +304,20 @@ def main():
     # List recent jobs
     list_jobs(limit=5)
 
-if __name__ == "__main__":
-    main()
+
+def main():
+    media_urls = [
+        "https://www.dropbox.com/scl/fi/eesz1rkgpxjdl81m9qu51/P7.avi?rlkey=w7ewszrtzf9m64x1yx1ajzobp&st=tsk6loki&dl=0"
+    ]
+
+    models = {
+        "face": {},
+        "language": {}
+    }
+
+    analyze(media_urls=media_urls, models=models)
+
+
+
+
+
