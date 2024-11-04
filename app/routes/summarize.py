@@ -1,7 +1,7 @@
 from flask import Blueprint
 from ..utils import *
 from flask_cors import cross_origin, CORS
-import app.services.supabase as supabase
+from ..services.supabase import supabase
 # from dailyDB import get_dailydb_data
 from app.services.summarize import dialogue_processing
 from app.services.audio import process_audio
