@@ -90,9 +90,6 @@ def preferred_qualification(text, questions, preferred_qual):
 
     return result
 
-
-
-
 def sentimental_analysis(text):
     #hume 
     return None
