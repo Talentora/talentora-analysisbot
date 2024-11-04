@@ -36,3 +36,4 @@ flask_cors
 gunicorn
 tensorflow==2.12.0
 torch
+supabase
