@@ -14,7 +14,7 @@ CORS(bp)
 
 #call the functions from controllers file
 #to be updated
-@bp.route("/url", methods=['GET','POST'])
+@bp.route("/interview", methods=['GET','POST'])
 @cross_origin
 def interview_response_summarization():
     pass
@@ -33,14 +33,14 @@ def interview_response_summarization():
     #         return handle_server_error(e)
 
 
-@bp.route("/url", methods=['GET','POST'])
+@bp.route("/video", methods=['GET','POST'])
 @cross_origin
 def interview_video_summarization():
     # analyze()
     return None
 
 
-@bp.route("/url", methods=['GET','POST'])
+@bp.route("/audio", methods=['GET','POST'])
 @cross_origin
 def interview_audio_summarization():
     process_audio()
