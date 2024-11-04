@@ -14,7 +14,7 @@ hume==0.7.2
 idna==3.10
 kiwisolver==1.4.7
 matplotlib==3.9.2
-numpy==1.26
+numpy==1.22
 opencv-python==4.10.0.84
 packaging==24.1
 pillow==11.0.0
