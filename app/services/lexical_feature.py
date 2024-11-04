@@ -3,9 +3,8 @@ analyzing what the candidate is saying and if their responses align with a good 
 for that role and company
 """
 from nltk.tokenize import word_tokenize 
-import spacy
 import openai
-
+import re
 
 
 def total_speech(text_raw):
@@ -14,6 +13,13 @@ def total_speech(text_raw):
         speech_script += answer
         speech_script += " "
     return speech_script
+
+def extract_score(answer):
+    match = re.search(r'\b([1-9]|10)\b', answer)
+    if match:
+        return int(match.group(1))
+    else:
+        return 0  # Default to 0 if score is not found
 
 def text_evaluation(text_raw, questions, min_qual, preferred_qual):
     speech_script = total_speech(text_raw)
@@ -36,24 +42,22 @@ def minimum_qualification(text, questions, min_qual): #min_qual is a list whose 
             f"Transcript:\n{text}\n\n"
             f"Evaluate the interviewee's qualification for: '{qualification}'.\n"
             "Provide a score from 1 to 10 based on how well they meet this qualification."
+            "\nRespond only with a number from 1 to 10."
         )
 
         response = openai.ChatCompletion.create(
-            model="gpt-3.5",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are an assistant assessing interview responses."},
                 {"role": "user", "content": prompt}
             ]
         )
+        #parsing
+        answer = response['choices'][0]['message']['content'].strip()
+        score = extract_score(answer)
+        result[i] = score
 
-    #parsing
-    answer = response['choices'][0]['message']['content'].strip()
-    try:
-        score = int(answer)
-        result[i] = min(max(score, 1), 10)  # Ensure score is within 1 to 10 range
-    except ValueError:
-        result[i] = 0  # Default to 0 if score could not be parsed
-
+    return result
 
 def preferred_qualification(text, questions, preferred_qual):
     result = [0] * len(preferred_qual)
@@ -68,10 +72,11 @@ def preferred_qualification(text, questions, preferred_qual):
             f"Transcript:\n{text}\n\n"
             f"Evaluate the interviewee's alignment with the preferred qualification: '{qualification}'.\n"
             "Provide a score from 1 to 10 based on how well they meet this qualification."
+            "\nRespond only with a number from 1 to 10."
         )
 
         response = openai.ChatCompletion.create(
-            model="gpt-3.5",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are an assistant assessing interview responses."},
                 {"role": "user", "content": prompt}
@@ -80,11 +85,8 @@ def preferred_qualification(text, questions, preferred_qual):
 
         # Parse
         answer = response['choices'][0]['message']['content'].strip()
-        try:
-            score = int(answer) 
-            result[i] = min(max(score, 1), 10)  # Ensure score is within 1 to 10 range
-        except ValueError:
-            result[i] = 0  # Default to 0 if score could not be parsed
+        score = extract_score(answer)
+        result[i] = score
 
     return result
 
