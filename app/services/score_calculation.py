@@ -2,11 +2,11 @@ import video
 import audio
 import lexical_feature
 
-def eval_result():
+def eval_result(text_raw, questions, min_qual, preferred_qual):
     #input: 
     #output: dictionary of scores (total, individual scores from different eval method)
     total = 0
-    text_result = lexical_feature.text_evaluation()
+    text_result = lexical_feature.text_evaluation(text_raw, questions, min_qual, preferred_qual)
     audio = 0
     video = 0
     
