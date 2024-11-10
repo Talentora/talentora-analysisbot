@@ -1,12 +1,10 @@
-import video
-import audio
-import lexical_feature
+from services.lexical_feature import text_evaluation
 
 def eval_result(text_raw, questions, min_qual, preferred_qual):
     #input: 
     #output: dictionary of scores (total, individual scores from different eval method)
     total = 0
-    text_result = lexical_feature.text_evaluation(text_raw, questions, min_qual, preferred_qual)
+    text_result = text_evaluation(text_raw, questions, min_qual, preferred_qual)
     audio = 0
     video = 0
     
@@ -42,13 +40,13 @@ def lexical_eval(text_result):
     return result_summary
 
 def categorize_score(score):
-        if score > 8:
+        if score > 80:
             return "great"
-        elif score > 6:
+        elif score > 60:
             return "good"
-        elif score > 4:
+        elif score > 40:
             return "ok"
-        elif score > 2:
+        elif score > 20:
             return "bad"
         else:
             return "poor"
