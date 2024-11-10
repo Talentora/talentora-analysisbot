@@ -15,7 +15,7 @@ def total_speech(text_raw):
     return speech_script
 
 def extract_score(answer):
-    match = re.search(r'\b([1-9]|10)\b', answer)
+    match = re.search(r'\b([1-9][0-9]?|100)\b', answer)
     if match:
         return int(match.group(1))
     else:
@@ -41,8 +41,8 @@ def minimum_qualification(text, questions, min_qual): #min_qual is a list whose 
             f"Questions asked during the interview:\n{questions_text}\n\n"
             f"Transcript:\n{text}\n\n"
             f"Evaluate the interviewee's qualification for: '{qualification}'.\n"
-            "Provide a score from 1 to 10 based on how well they meet this qualification."
-            "\nRespond only with a number from 1 to 10."
+            "Provide a score from 1 to 100 based on how well they meet this qualification."
+            "\nRespond only with a number from 1 to 100."
         )
 
         response = openai.ChatCompletion.create(
@@ -71,8 +71,8 @@ def preferred_qualification(text, questions, preferred_qual):
             f"Questions asked during the interview:\n{questions_text}\n\n"
             f"Transcript:\n{text}\n\n"
             f"Evaluate the interviewee's alignment with the preferred qualification: '{qualification}'.\n"
-            "Provide a score from 1 to 10 based on how well they meet this qualification."
-            "\nRespond only with a number from 1 to 10."
+            "Provide a score from 1 to 100 based on how well they meet this qualification."
+            "\nRespond only with a number from 1 to 100."
         )
 
         response = openai.ChatCompletion.create(
@@ -96,11 +96,6 @@ def sentimental_analysis(text):
 
 #high wpsec, wc, uc --> better candidate
 #low fpsec, filler words, non-fluency words, unvoiced region in speech
-
-
-#print(sentimental_analysis("I had a difficulty with time management."))
-#print(sentimental_analysis("I had a difficulty with time management, but I could overcome this problem with google calendar management"))
-
 
 """
 
