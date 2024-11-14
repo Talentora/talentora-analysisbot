@@ -25,6 +25,6 @@ def interview_evaluation():
         #send evaluation
         result = insert_supabase_data(table,interview_eval)
 
-        return jsonify({'result': result}), 200
+        return handle_success(result)
     except Exception as e:
-         return jsonify({'error': str(e)}), 500
+         return handle_server_error(e)
