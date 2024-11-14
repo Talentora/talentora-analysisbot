@@ -8,7 +8,6 @@ from app.controllers.daily_db import get_dailydb_data
 from controllers.supabase_db import insert_supabase_data
 # from app.services.sentiment_analysis import analyze
 
-supabase_client = supabase()
 bp = Blueprint('summarize', __name__)
 CORS(bp)
 
@@ -21,7 +20,11 @@ def interview_response_summarization():
         dialogue = get_dailydb_data()
         # Summarization
         summarized_dialogue = dialogue_processing(dialogue)
-        result = supabase_client.insert_supabase_data({"summarized_dialogue": summarized_dialogue})
+        summary_id = ""
+        data_insert = {'id':summary_id,'summary' :summarized_dialogue}
+        result = insert_supabase_data("AI_summary",data_insert)
+
+        #update the other table
             
         # Return summarized data to superbase
         return handle_success(result)
