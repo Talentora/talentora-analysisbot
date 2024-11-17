@@ -1,4 +1,4 @@
-from services.lexical_feature import text_evaluation
+from app.services.lexical_feature import text_evaluation
 
 def eval_result(text_raw, questions, min_qual, preferred_qual):
     #input: 
