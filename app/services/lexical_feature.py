@@ -3,71 +3,92 @@ analyzing what the candidate is saying and if their responses align with a good 
 for that role and company
 """
 from nltk.tokenize import word_tokenize 
-import spacy
 import openai
+import re
 
-def lexical_feature_eval(text_raw):
-    lex_analysis_data = qualification(text_raw)
-
-    return lex_analysis_data
 
 def total_speech(text_raw):
-    speech_script = ''
-    for i in range(len(text_raw)):
-        speech_script += text_raw[i]
+    speech_script = ""
+    for answer in text_raw:
+        speech_script += answer
+        speech_script += " "
     return speech_script
 
-def qualification(text_raw):
-    result = {'minimum qualification','preferred_qualification','answer_quality'}
+def extract_score(answer):
+    match = re.search(r'\b([1-9][0-9]?|100)\b', answer)
+    if match:
+        return int(match.group(1))
+    else:
+        return 0  # Default to 0 if score is not found
+
+def text_evaluation(text_raw, questions, min_qual, preferred_qual):
     speech_script = total_speech(text_raw)
-    minimum_qualification(speech_script)
-    preferred_qualification(speech_script)
-    answer_quality(speech_script)
+    result = {
+        'minimum_qualification': minimum_qualification(speech_script, questions, min_qual),
+        'preferred_qualification': preferred_qualification(speech_script, questions, preferred_qual)
+    }
     return result
 
-def minimum_qualification(text):
-    result = {}
-    min_qual = ["No"] * 5  # Assuming a max of 5 qualifications
+def minimum_qualification(text, questions, min_qual): #min_qual is a list whose elements are string
+    result = [0] * len(min_qual)
 
-    for i in range(len(min_qual)):
+    questions_text = "\n".join([f"Q{i+1}: {question}" for i, question in enumerate(questions)])
+
+    for i, qualification in enumerate(min_qual):
+        # Include the questions, interview transcript, and specific qualification
+        prompt = (
+            "You are an assistant assessing qualifications of an interviewee based on their answers.\n\n"
+            f"Questions asked during the interview:\n{questions_text}\n\n"
+            f"Transcript:\n{text}\n\n"
+            f"Evaluate the interviewee's qualification for: '{qualification}'.\n"
+            "Provide a score from 1 to 100 based on how well they meet this qualification."
+            "\nRespond only with a number from 1 to 100."
+        )
+
         response = openai.ChatCompletion.create(
-            model="gpt-3.5",
+            model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are an assistant assessing qualifications."},
-                {"role": "user", "content": f"In the interview script, does this person mention content aligned with qualification {i+1}? Answer yes or no. Text: {text}"}
+                {"role": "system", "content": "You are an assistant assessing interview responses."},
+                {"role": "user", "content": prompt}
             ]
         )
-        answer = response['choices'][0]['message']['content'].strip().lower()
-        min_qual[i] = "Yes" if "yes" in answer else "No"
+        #parsing
+        answer = response['choices'][0]['message']['content'].strip()
+        score = extract_score(answer)
+        result[i] = score
 
-    result['min_qualifications'] = min_qual
     return result
 
-def preferred_qualification(text):
-    #max 5
-    result = {}
-    preferred_qual = ["No"] * 5  # Assuming a max of 5 qualifications
+def preferred_qualification(text, questions, preferred_qual):
+    result = [0] * len(preferred_qual)
 
-    for i in range(len(preferred_qual)):
+    questions_text = "\n".join([f"Q{i+1}: {question}" for i, question in enumerate(questions)])
+
+    for i, qualification in enumerate(preferred_qual):
+        # Include the questions, interview transcript, and specific preferred qualification
+        prompt = (
+            "You are an assistant assessing the preferred qualifications of an interviewee based on their responses.\n\n"
+            f"Questions asked during the interview:\n{questions_text}\n\n"
+            f"Transcript:\n{text}\n\n"
+            f"Evaluate the interviewee's alignment with the preferred qualification: '{qualification}'.\n"
+            "Provide a score from 1 to 100 based on how well they meet this qualification."
+            "\nRespond only with a number from 1 to 100."
+        )
+
         response = openai.ChatCompletion.create(
-            model="gpt-3.5",
+            model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are an assistant assessing qualifications."},
-                {"role": "user", "content": f"In the interview script, does this person mention content aligned with preferred qualification {i+1}? Answer yes or no. Text: {text}"}
+                {"role": "system", "content": "You are an assistant assessing interview responses."},
+                {"role": "user", "content": prompt}
             ]
         )
-        answer = response['choices'][0]['message']['content'].strip().lower()
-        preferred_qual[i] = "Yes" if "yes" in answer else "No"
 
-    result['preferred_qualifications'] = preferred_qual
+        # Parse
+        answer = response['choices'][0]['message']['content'].strip()
+        score = extract_score(answer)
+        result[i] = score
+
     return result
-
-def answer_quality(text):
-    result = {}
-    #descriptive, coherent
-    return result
-
-
 
 def sentimental_analysis(text):
     #hume 
@@ -75,11 +96,6 @@ def sentimental_analysis(text):
 
 #high wpsec, wc, uc --> better candidate
 #low fpsec, filler words, non-fluency words, unvoiced region in speech
-
-
-#print(sentimental_analysis("I had a difficulty with time management."))
-#print(sentimental_analysis("I had a difficulty with time management, but I could overcome this problem with google calendar management"))
-
 
 """
 
