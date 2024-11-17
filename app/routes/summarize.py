@@ -8,9 +8,10 @@ from app.controllers.daily_db import get_dailydb_data
 from controllers.supabase_db import insert_supabase_data
 # from app.services.sentiment_analysis import analyze
 
-supabase_client = supabase()
+# supabase_client = supabase()
 bp = Blueprint('summarize', __name__)
 CORS(bp)
+
 
 
 @bp.route("/url", methods=['GET','POST'])
@@ -29,14 +30,14 @@ def interview_response_summarization():
         return handle_server_error(e)
 
 
-@bp.route("/url", methods=['GET','POST'])
+@bp.route("/video", methods=['GET','POST'])
 @cross_origin
 def interview_video_summarization():
     # analyze()
     return None
 
 
-@bp.route("/url", methods=['GET','POST'])
+@bp.route("/audio", methods=['GET','POST'])
 @cross_origin
 def interview_audio_summarization():
     process_audio()
