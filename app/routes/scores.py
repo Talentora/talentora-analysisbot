@@ -11,7 +11,7 @@ from app.services.summarize import dialogue_processing
 bp = Blueprint('scores', __name__)
 CORS(bp)
 
-@bp.route("/url", methods=['PUT'])
+@bp.route("/interview/evaluation", methods=['PUT'])
 @cross_origin
 def interview_evaluation():
     try:
