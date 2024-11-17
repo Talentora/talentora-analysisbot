@@ -1,14 +1,15 @@
 import os
 from supabase import create_client, Client
+import api_keys
 
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
+url: str = "https://laieiinzukjqqbaglafj.supabase.co"
+key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhaWVpaW56dWtqcXFiYWdsYWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMyMzczNzksImV4cCI6MjAzODgxMzM3OX0.UQ7nVOKLRv7tGyNWarHm0k399xxDefYQsjkngNEIEhQ"
 supabase: Client = create_client(url, key)
 
 #fetch
-def get_supabase_data(table,select_target):
+def get_supabase_data(table,select_target,conditions):
     #all inputs are string
-    response = supabase.table(table).select(select_target).execute()
+    response = supabase.table(table).select(select_target).eq(conditions[0],conditions[1]).execute()
     return response
 
 #insert data
@@ -44,7 +45,8 @@ def data_update_format(table_name,data_for_update,condition):
     response = (
         supabase.table(table_name)
         .update(data_for_update)
-        .eq(condition) #"id", 1
+        .eq(condition[0],condition[1])
+        .eq(condition[2],condition[3])
         .execute()
         )
     return response
