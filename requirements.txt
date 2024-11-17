@@ -39,4 +39,3 @@ torch
 supabase
 nltk
 openai
-dotenv
