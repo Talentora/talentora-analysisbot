@@ -5,6 +5,7 @@
 # key: str = os.environ.get("DAILY_KEY")
 # supabase: Client = create_client(url, key)
 
+
 # #fetch
 # def get_dailydb_data(table,select_target):
 #     pass
