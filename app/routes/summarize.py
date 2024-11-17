@@ -14,7 +14,7 @@ CORS(bp)
 
 
 
-@bp.route("/url", methods=['GET','POST'])
+@bp.route("/url", methods=['GET'])
 @cross_origin
 def interview_response_summarization():
     try:
@@ -26,20 +26,20 @@ def interview_response_summarization():
             
         # Return summarized data to superbase
         # return handle_success(result)
-        return handle_success("not implemented yet")
+        return handle_success("not yet implemented")
     except Exception as e:
         return handle_server_error(e)
 
 
-@bp.route("/video", methods=['GET','POST'])
+@bp.route("/video", methods=['GET'])
 @cross_origin
 def interview_video_summarization():
     # analyze()
-    return None
+    return handle_success("not yet implemented")
 
 
-@bp.route("/audio", methods=['GET','POST'])
+@bp.route("/audio", methods=['GET'])
 @cross_origin
 def interview_audio_summarization():
-    process_audio()
-    return None    
+    # process_audio()
+    return handle_success("not yet implemented")  
