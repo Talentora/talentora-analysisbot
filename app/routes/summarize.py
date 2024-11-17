@@ -2,10 +2,10 @@ from flask import Blueprint
 from ..utils import *
 from flask_cors import cross_origin, CORS
 import app.services.supabase as supabase
-from app.services.summarize import dialogue_processing
+# from app.services.summarize import dialogue_processing
 from app.services.audio import process_audio
 # from app.controllers.daily_db import get_dailydb_data
-from controllers.supabase_db import insert_supabase_data
+# from app.controllers.supabase_db import insert_supabase_data
 # from app.services.sentiment_analysis import analyze
 
 # supabase_client = supabase()
