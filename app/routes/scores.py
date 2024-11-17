@@ -8,6 +8,6 @@ bp = Blueprint('scores', __name__)
 CORS(bp)
 
 @bp.route("/interview", methods=['GET'])
-@cross_origin
+@cross_origin()
 def interview_score():
     return handle_success("not yet implemented")

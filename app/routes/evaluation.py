@@ -19,7 +19,7 @@ bp = Blueprint('eval', __name__)
 CORS(bp)
 
 @bp.route("/url", methods=['GET','POST'])
-@cross_origin
+@cross_origin()
 def interview_evaluation():
     try:
         batch_processor = DailyBatchProcessor(api_key)
