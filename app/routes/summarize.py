@@ -4,7 +4,7 @@ from flask_cors import cross_origin, CORS
 import app.services.supabase as supabase
 from app.services.summarize import dialogue_processing
 from app.services.audio import process_audio
-from app.controllers.daily_db import get_dailydb_data
+# from app.controllers.daily_db import get_dailydb_data
 from controllers.supabase_db import insert_supabase_data
 # from app.services.sentiment_analysis import analyze
 
@@ -19,13 +19,14 @@ CORS(bp)
 def interview_response_summarization():
     try:
         #get data from DailyDB
-        dialogue = get_dailydb_data()
+        # dialogue = get_dailydb_data()
         # Summarization
-        summarized_dialogue = dialogue_processing(dialogue)
-        result = supabase_client.insert_supabase_data({"summarized_dialogue": summarized_dialogue})
+        # summarized_dialogue = dialogue_processing(dialogue)
+        # result = supabase_client.insert_supabase_data({"summarized_dialogue": summarized_dialogue})
             
         # Return summarized data to superbase
-        return handle_success(result)
+        # return handle_success(result)
+        return handle_success("not implemented yet")
     except Exception as e:
         return handle_server_error(e)
 
