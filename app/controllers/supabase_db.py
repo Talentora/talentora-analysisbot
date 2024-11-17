@@ -1,16 +1,18 @@
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
+import api_keys
 
 load_dotenv()
 url: str = os.getenv("SUPABASE_URL")
 key: str = os.getenv("SUPABASE_KEY")
+
 supabase: Client = create_client(url, key)
 
 #fetch
-def get_supabase_data(table,select_target):
+def get_supabase_data(table,select_target,conditions):
     #all inputs are string
-    response = supabase.table(table).select(select_target).execute()
+    response = supabase.table(table).select(select_target).eq(conditions[0],conditions[1]).execute()
     return response
 
 #insert data
@@ -46,7 +48,8 @@ def data_update_format(table_name,data_for_update,condition):
     response = (
         supabase.table(table_name)
         .update(data_for_update)
-        .eq(condition) #"id", 1
+        .eq(condition[0],condition[1])
+        .eq(condition[2],condition[3])
         .execute()
         )
     return response
