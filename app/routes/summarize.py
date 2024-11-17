@@ -15,8 +15,8 @@ CORS(bp)
 
 
 @bp.route("/url", methods=['GET'])
-@cross_origin
-def interview_response_summarization():
+@cross_origin()
+def response_summarization():
     try:
         #get data from DailyDB
         # dialogue = get_dailydb_data()
@@ -32,14 +32,14 @@ def interview_response_summarization():
 
 
 @bp.route("/video", methods=['GET'])
-@cross_origin
-def interview_video_summarization():
+@cross_origin()
+def video_summarization():
     # analyze()
     return handle_success("not yet implemented")
 
 
 @bp.route("/audio", methods=['GET'])
-@cross_origin
-def interview_audio_summarization():
+@cross_origin()
+def audio_summarization():
     # process_audio()
     return handle_success("not yet implemented")  
