@@ -1,3 +1,6 @@
+from flask import Blueprint, request
+from flask_cors import cross_origin, CORS
+
 import requests
 import time
 import os
@@ -7,6 +10,9 @@ from typing import Dict, Optional
 from dataclasses import dataclass
 
 load_dotenv()
+
+bp = Blueprint('transcription', __name__)
+CORS(bp)
 
 @dataclass
 class JobStatus:
@@ -141,24 +147,45 @@ def process_transcription_job(processor: DailyBatchProcessor, recording_id: str)
         print("Waiting for job completion...")
         output = processor.wait_for_completion(job_id)
         
-        if output:
-            print("\nTranscription completed successfully!")
-            print("\nAvailable transcripts:")
-            for transcript in output["transcription"]:
-                print(f"Format: {transcript['format']}")
-                print(f"Download link: {transcript['link']}\n")
+        # if output:
+        #     print("\nTranscription completed successfully!")
+        #     print("\nAvailable transcripts:")
+        #     for transcript in output["transcription"]:
+        #         print(f"Format: {transcript['format']}")
+        #         print(f"Download link: {transcript['link']}\n")
             
-            # Print S3 information if available
-            job_status = processor.get_job_status(job_id)
-            if job_status.output and "transcription" in job_status.output:
-                print("\nS3 Storage Information:")
-                for transcript in job_status.output["transcription"]:
-                    print(f"\nFormat: {transcript['format']}")
-                    print(f"S3 Bucket: {transcript['s3Config']['bucket']}")
-                    print(f"S3 Key: {transcript['s3Config']['key']}")
-                    print(f"Region: {transcript['s3Config']['region']}")
+        #     # Print S3 information if available
+        #     job_status = processor.get_job_status(job_id)
+        #     if job_status.output and "transcription" in job_status.output:
+        #         print("\nS3 Storage Information:")
+        #         for transcript in job_status.output["transcription"]:
+        #             print(f"\nFormat: {transcript['format']}")
+        #             print(f"S3 Bucket: {transcript['s3Config']['bucket']}")
+        #             print(f"S3 Key: {transcript['s3Config']['key']}")
+        #             print(f"Region: {transcript['s3Config']['region']}")
+        # else:
+        #     print("Job timed out. Please check the job status manually.")
+        
+        if output and "transcription" in output:
+            # Find the TXT format transcript
+            txt_transcript = next(
+                (t for t in output["transcription"] if t["format"] == "txt"),
+                None
+            )
+            
+            if txt_transcript:
+                # Get the download link for the TXT file
+                download_link = txt_transcript["link"]
+                print("Downloading transcript text...")
+                
+                # Download and return the text content
+                response = requests.get(download_link)
+                response.raise_for_status()
+                return response.text
+            else:
+                return "Error: No TXT format transcript found"
         else:
-            print("Job timed out. Please check the job status manually.")
+            return "Error: Job timed out or failed to complete"
             
     except requests.exceptions.HTTPError as e:
         print(f"HTTP Error occurred: {e}")
@@ -171,13 +198,11 @@ def main():
         print("Error: DAILY_API_KEY not found in environment variables")
         print("Please ensure you have created a .env file with your API key")
         return
-        
-    # Print first few characters of API key for verification (safely)
-    
+            
     recording_id = "1dd0c3e0-433d-4d90-ae85-da826137f476"
     
     processor = DailyBatchProcessor(api_key)
-    process_transcription_job(processor, recording_id)
+    print(process_transcription_job(processor, recording_id))
 
 if __name__ == "__main__":
     main()
