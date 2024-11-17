@@ -1,9 +1,6 @@
 import os
 from supabase import create_client, Client
-
-url: str = os.environ.get("DAILY_URL")
-key: str = os.environ.get("DAILY_KEY")
-supabase: Client = create_client(url, key)
+import api_keys
 
 #fetch
 def get_dailydb_data(table,select_target):
