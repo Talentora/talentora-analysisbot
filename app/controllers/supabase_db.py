@@ -2,8 +2,8 @@ import os
 from supabase import create_client, Client
 import api_keys
 
-url: str = "https://laieiinzukjqqbaglafj.supabase.co"
-key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhaWVpaW56dWtqcXFiYWdsYWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMyMzczNzksImV4cCI6MjAzODgxMzM3OX0.UQ7nVOKLRv7tGyNWarHm0k399xxDefYQsjkngNEIEhQ"
+url: str = "SUPABASE_URL"
+key: str = "SUPABASE_KEY"
 supabase: Client = create_client(url, key)
 
 #fetch
