@@ -10,4 +10,4 @@ CORS(bp)
 @bp.route("/interview", methods=['GET'])
 @cross_origin
 def interview_score():
-    pass
+    return handle_success("not yet implemented")

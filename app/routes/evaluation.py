@@ -11,6 +11,9 @@ from app.controllers.dailybatchprocessor import DailyBatchProcessor, process_tra
 load_dotenv()
 
 api_key=os.environ.get("DAILY_API_KEY")
+if not api_key:
+    # raise EnvironmentError("DAILY_API_KEY environment variable is not set!")
+    api_key = "none"
 
 bp = Blueprint('eval', __name__)
 CORS(bp)
