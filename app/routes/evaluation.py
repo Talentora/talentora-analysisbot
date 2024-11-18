@@ -5,18 +5,22 @@ from dotenv import load_dotenv
 from ..utils import *
 from app.services import score_calculation
 from app.controllers.supabase_db import insert_supabase_data, get_supabase_data
-from app.controllers.daily_db import get_dailydb_data
+# from app.controllers.daily_db import get_dailydb_data
+
 from app.controllers.dailybatchprocessor import DailyBatchProcessor, process_transcription_job
 
 load_dotenv()
 
 api_key=os.environ.get("DAILY_API_KEY")
+if not api_key:
+    # raise EnvironmentError("DAILY_API_KEY environment variable is not set!")
+    api_key = "none"
 
 bp = Blueprint('eval', __name__)
 CORS(bp)
 
 @bp.route("/url", methods=['GET','POST'])
-@cross_origin
+@cross_origin()
 def interview_evaluation():
     try:
         batch_processor = DailyBatchProcessor(api_key)

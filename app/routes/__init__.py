@@ -1,7 +1,7 @@
 from flask import Flask
-from .scores import bp as scores_bp
-from .summarize import bp as summarize_bp
-from .evaluation import bp as eval_bp
+from app.routes.scores import bp as scores_bp
+from app.routes.summarize import bp as summarize_bp
+from app.routes.evaluation import bp as eval_bp
 
 """A function to register all the blueprints."""
 def register_blueprints(app: Flask):
