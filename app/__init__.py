@@ -13,7 +13,8 @@ def create_app(Test=False) -> Flask:
     @app.route("/")
     def health_check():
         return "<p>Hello, World!</p>"
-
+    
     routes.register_blueprints(app)
+   
 
     return app
