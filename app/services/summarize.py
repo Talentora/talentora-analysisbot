@@ -1,16 +1,26 @@
-#https://huggingface.co/facebook/bart-large-cnn
+import openai
+from app.services.lexical_feature import total_speech
 
-from transformers import pipeline
+def dialogue_processing(text_raw, questions):
+    speech_script = total_speech(text_raw)
+    response = summarize_text(speech_script, questions)
+    return response
 
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+def summarize_text(text, questions): #min_qual is a list whose elements are string
+    questions_text = "\n".join([f"Q{i+1}: {question}" for i, question in enumerate(questions)])
 
-def summarize_text(text):
-    max_chunk = 1000  # Adjust based on model's max tokens
-    chunks = [text[i:i+max_chunk] for i in range(0, len(text), max_chunk)]
-    summarized_chunks = [summarizer(chunk, max_length=130, min_length=30, do_sample=False)[0]['summary_text'] for chunk in chunks]
-    return ' '.join(summarized_chunks)
+    prompt = ("You are an assistant assessing qualifications of an interviewee based on their answers.\n\n"
+            f"Questions asked during the interview:\n{questions_text}\n\n"
+            f"Transcribed Interview:\n{text}\n\n"
+            "Based on the interview questions, summarize the interview response.")
+    
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "system", "content": "You are an assistant assessing interview responses."},
+                    {"role": "user", "content": prompt}]
+        )
 
-def dialogue_processing(dialogue):
-    for entry in dialogue:
-        entry['summarized-answer'] = summarize_text(entry['raw-answer'])
-    return dialogue
+        return response['choices'][0]['message']['content'].strip()
+    except Exception as e:
+        return f"Error in generating summary: {e}"
