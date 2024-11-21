@@ -7,9 +7,9 @@ import hashlib
 from dotenv import load_dotenv
 from ..utils import *
 from app.services import score_calculation
-from app.controllers.supabase_db import insert_supabase_data, get_supabase_data
-# from app.controllers.daily_db import get_dailydb_data
-
+from app.services import summarize
+from app.controllers.supabase_db import SupabaseDB
+import uuid
 from app.controllers.dailybatchprocessor import DailyBatchProcessor, process_transcription_job
 
 load_dotenv()
@@ -82,18 +82,28 @@ def handle_webhook():
             
             # Process the transcription with the recording ID
             text_raw = process_transcription_job(batch_processor, recording_id)
+            supabase_condition = ["id",recording_id]
+            job_id = SupabaseDB.get_supabase_data("applications","job_id",supabase_condition)
             
             # Get necessary data from Supabase
-            questions = get_supabase_data()
-            min_qual = get_supabase_data()
-            preferred_qual = get_supabase_data()
-            table = get_supabase_data()
+            job_condition = ["job_id",job_id]
+            questions = SupabaseDB.get_supabase_data("job_interview_config","interview_questions",job_condition)
+            min_qual = SupabaseDB.get_supabase_data("job_interview_config","min_qual",job_condition)
+            preferred_qual = SupabaseDB.get_supabase_data("job_interview_config","preferred_qual",job_condition)
 
             # Calculate interview evaluation
+            evaluation_id = str(uuid())
             interview_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
+            emotional_eval = {}
+            interview_summary = summarize.dialogue_processing(text_raw, questions)
 
             # Send evaluation to Supabase
-            result = insert_supabase_data(table, interview_eval)
+            data_to_insert = {"id":evaluation_id,"interview_eval":interview_eval,"emotional_eval":emotional_eval,"interview_summary":interview_summary}
+            result = SupabaseDB.insert_supabase_data("AI_summary", data_to_insert)
+
+            #update
+            update = {"AI_Summary":evaluation_id}
+            result = SupabaseDB.update_supabase_data("applications", update, supabase_condition)
             
             return handle_success(result)
         

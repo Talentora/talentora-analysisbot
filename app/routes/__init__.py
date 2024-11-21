@@ -1,6 +1,6 @@
 from flask import Flask
-from .scores import bp as scores_bp
+from .evaluation import bp as evaluation_bp
 
 """A function to register all the blueprints."""
 def register_blueprints(app: Flask):
-    app.register_blueprint(scores_bp, url_prefix='/scores')
+    app.register_blueprint(evaluation_bp, url_prefix='/evaluation')
