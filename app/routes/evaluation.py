@@ -93,12 +93,12 @@ def handle_webhook():
 
             # Calculate interview evaluation
             evaluation_id = str(uuid())
-            interview_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
-            emotional_eval = {}
+            text_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
+            emotion_eval = {}
             interview_summary = summarize.dialogue_processing(text_raw, questions)
 
             # Send evaluation to Supabase
-            data_to_insert = {"id":evaluation_id,"interview_eval":interview_eval,"emotional_eval":emotional_eval,"interview_summary":interview_summary}
+            data_to_insert = {"id":evaluation_id,"text_eval":text_eval,"emotion_eval":emotion_eval,"interview_summary":interview_summary}
             result = SupabaseDB.insert_supabase_data("AI_summary", data_to_insert)
 
             #update
