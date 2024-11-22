@@ -83,6 +83,8 @@ def handle_webhook():
             # Process the transcription with the recording ID
             text_raw = process_transcription_job(batch_processor, recording_id)
             
+            print(text_raw)
+                        
             # Get necessary data from Supabase
             questions = get_supabase_data()
             min_qual = get_supabase_data()
