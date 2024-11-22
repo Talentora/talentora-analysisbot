@@ -36,6 +36,7 @@ class EmotionAnalyzer:
         """
         face_accumulated_emotions = {}
         prosody_accumulated_emotions = {}
+        language_accumulated_emotions = {}
         frame_count = 0
 
         for prediction in predictions:
@@ -56,6 +57,13 @@ class EmotionAnalyzer:
                             emotions = {emotion.name: emotion.score for emotion in pred.emotions}
                             for emotion, score in emotions.items():
                                 prosody_accumulated_emotions[emotion] = prosody_accumulated_emotions.get(emotion, 0.0) + score
+                                
+                if result.models.language:
+                    for prosody in result.models.language.grouped_predictions:
+                        for pred in prosody.predictions:
+                            emotions = {emotion.name: emotion.score for emotion in pred.emotions}
+                            for emotion, score in emotions.items():
+                                prosody_accumulated_emotions[emotion] = prosody_accumulated_emotions.get(emotion, 0.0) + score
 
         if frame_count == 0:
             return {}
@@ -65,6 +73,8 @@ class EmotionAnalyzer:
                                for emotion, total_score in face_accumulated_emotions.items()}
         prosody_average_emotions = {emotion: total_score / frame_count 
                                   for emotion, total_score in prosody_accumulated_emotions.items()}
+        language_average_emotions = {emotion: total_score / frame_count
+                                     for emotion, total_score in language_accumulated_emotions.items()}
 
         return {
             'face': {
@@ -74,6 +84,10 @@ class EmotionAnalyzer:
             'prosody': {
                 'average_emotions': prosody_average_emotions,
                 'aggregate_score': self.aggregate_emotion_score(prosody_average_emotions)
+            },
+            'language': {
+                'average_emotions': language_average_emotions,
+                'aggregate_score': self.aggregate_emotion_score(language_average_emotions)
             },
             'metadata': {
                 'frame_count': frame_count
