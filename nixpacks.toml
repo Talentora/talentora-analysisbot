@@ -1,8 +1,0 @@
-# nixpacks.toml
-
-[phases.setup]
-aptPkgs = ["libsm6", "ffmpeg", "libxext6", "libgl1-mesa-glx", "libportaudio2", "portaudio19-dev", "libasound-dev"]   
-python_version = "3.10"
-
-[phases.setup.environment]
-LD_LIBRARY_PATH = "/usr/local/lib:/usr/lib"
