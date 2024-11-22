@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin, CORS
 from ..utils import *
+from sentiment import run_emotion_analysis
 import uuid
 from app.services import score_calculation
 from app.controllers.supabase_db import insert_supabase_data, get_supabase_data, update_supabase_data
@@ -28,6 +29,15 @@ def interview_evaluation():
         # #{"total":total,"text":lex,"audio":audio,"video":video}
         # interview_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
         # emotion_eval = {} #vincent
+        media_urls = ["video download link",
+                      "text file"
+                      ]
+        models = {
+            "face": {},
+            "language": {},
+            "prosody": {}
+        }
+        run_emotion_analysis(media_urls, models)
         # interview_summary = dialogue_processing(text_raw)
 
         # #send evaluation
