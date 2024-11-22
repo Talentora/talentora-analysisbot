@@ -49,6 +49,7 @@ def main():
         print(f"Processed {results['metadata']['frame_count']} frames")
         print(f"\nFace Emotion Aggregate Score: {results['face']['aggregate_score']}/10")
         print(f"Prosody Emotion Aggregate Score: {results['prosody']['aggregate_score']}/10")
+        print(f"Language Emotion Aggregate Score: {results['language']['aggregate_score']}/10")
         
         print("\nDetailed Face Emotions:")
         for emotion, score in results['face']['average_emotions'].items():
@@ -56,6 +57,10 @@ def main():
             
         print("\nDetailed Prosody Emotions:")
         for emotion, score in results['prosody']['average_emotions'].items():
+            print(f"  {emotion}: {score:.4f}")
+            
+        print("\nDetailed Language Emotions:")
+        for emotion, score in results['language']['average_emotions'].items():
             print(f"  {emotion}: {score:.4f}")
 
 if __name__ == "__main__":
