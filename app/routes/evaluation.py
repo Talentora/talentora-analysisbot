@@ -6,8 +6,8 @@ import base64
 import hashlib
 from dotenv import load_dotenv
 from ..utils import *
-from app.services import score_calculation
-from app.controllers.supabase_db import insert_supabase_data, get_supabase_data
+# from app.services import score_calculation
+# from app.controllers.supabase_db import insert_supabase_data, get_supabase_data
 # from app.controllers.daily_db import get_dailydb_data
 
 from app.controllers.dailybatchprocessor import DailyBatchProcessor, process_transcription_job
@@ -83,6 +83,8 @@ def handle_webhook():
             # Process the transcription with the recording ID
             text_raw = process_transcription_job(batch_processor, recording_id)
             
+            print(text_raw)
+                        
             # Get necessary data from Supabase
             questions = get_supabase_data()
             min_qual = get_supabase_data()
