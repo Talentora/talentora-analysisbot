@@ -24,6 +24,7 @@ if not api_key:
 bp = Blueprint('eval', __name__)
 CORS(bp)
 
+<<<<<<< Updated upstream
 def verify_webhook_signature(timestamp, raw_body, signature):
     if not webhook_secret:
         return True  # Skip verification if secret not set
@@ -102,5 +103,43 @@ def handle_webhook():
         return jsonify({'error': 'Unsupported event type'}), 400
         
     except Exception as e:
+=======
+@bp.route("/webhook", methods=['POST'])
+@cross_origin()
+def handle_webhook():
+    try:
+        # Get the webhook payload
+        webhook_data = request.get_json()
+        
+        # Verify this is a recording.ready-to-download event
+        if webhook_data['type'] != 'recording.ready-to-download':
+            return jsonify({'error': 'Unsupported event type'}), 400
+            
+        # Extract the recording ID from the payload
+        recording_id = webhook_data['payload']['recording_id']
+        
+        # Initialize the batch processor
+        batch_processor = DailyBatchProcessor(api_key)
+        
+        # Process the transcription with the recording ID
+        text_raw = process_transcription_job(batch_processor, recording_id)
+        
+        print(text_raw)
+        
+        # Get necessary data from Supabase
+        questions = get_supabase_data()
+        min_qual = get_supabase_data()
+        preferred_qual = get_supabase_data()
+        table = get_supabase_data()
+
+        # Calculate interview evaluation
+        interview_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
+
+        # Send evaluation to Supabase
+        result = insert_supabase_data(table, interview_eval)
+
+        return handle_success(result)
+    except Exception as e:
+>>>>>>> Stashed changes
         return handle_server_error(e)
 
