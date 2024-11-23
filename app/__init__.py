@@ -10,7 +10,7 @@ def create_app(Test=False) -> Flask:
     # Enable CORS
     CORS(app, resources={r"/*": {"origins": "*"}})
 
-    @app.route("/")
+    @app.route("/", methods=["GET"])
     def health_check():
         return "<p>Hello, World!</p>"
     
