@@ -39,6 +39,7 @@ def lexical_eval(text_result):
 
     return result_summary
 
+"""
 def categorize_score(score):
         if score > 80:
             return "great"
@@ -50,3 +51,4 @@ def categorize_score(score):
             return "bad"
         else:
             return "poor"
+"""

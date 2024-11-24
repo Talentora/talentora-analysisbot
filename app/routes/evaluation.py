@@ -4,12 +4,13 @@ import os
 import hmac
 import base64
 import hashlib
+import uuid
 from dotenv import load_dotenv
 from ..utils import *
-# from app.services import score_calculation
-# from app.controllers.supabase_db import insert_supabase_data, get_supabase_data
-# from app.controllers.daily_db import get_dailydb_data
-
+from app.services import score_calculation
+from app.services import summarize
+from app.services.sentiment import run_emotion_analysis
+from app.controllers.supabase_db import SupabaseDB
 from app.controllers.dailybatchprocessor import DailyBatchProcessor, process_transcription_job
 
 load_dotenv()
@@ -82,20 +83,39 @@ def handle_webhook():
             
             # Process the transcription with the recording ID
             text_raw = process_transcription_job(batch_processor, recording_id)
+            supabase_condition = ["id",recording_id]
+            job_id = SupabaseDB.get_supabase_data("applications","job_id",supabase_condition)
             
             print(text_raw)
                         
             # Get necessary data from Supabase
-            questions = get_supabase_data()
-            min_qual = get_supabase_data()
-            preferred_qual = get_supabase_data()
-            table = get_supabase_data()
+            job_condition = ["job_id",job_id]
+            questions = SupabaseDB.get_supabase_data("job_interview_config","interview_questions",job_condition)
+            min_qual = SupabaseDB.get_supabase_data("job_interview_config","min_qual",job_condition)
+            preferred_qual = SupabaseDB.get_supabase_data("job_interview_config","preferred_qual",job_condition)
+            media_url = SupabaseDB.get_supabase_data("job_interview_config","preferred_qual",job_condition)
+            media_urls = ["video download link",
+                        "text file"
+                        ]
+            models = {
+                "face": {},
+                "language": {},
+                "prosody": {}
+            }
 
             # Calculate interview evaluation
-            interview_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
+            evaluation_id = str(uuid())
+            text_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
+            emotion_eval = run_emotion_analysis(media_urls, models)
+            interview_summary = summarize.dialogue_processing(text_raw, questions)
 
             # Send evaluation to Supabase
-            result = insert_supabase_data(table, interview_eval)
+            data_to_insert = {"id":evaluation_id,"text_eval":text_eval,"emotion_eval":emotion_eval,"interview_summary":interview_summary}
+            result = SupabaseDB.insert_supabase_data("AI_summary", data_to_insert)
+
+            #update
+            update = {"AI_Summary":evaluation_id}
+            result = SupabaseDB.update_supabase_data("applications", update, supabase_condition)
             
             return handle_success(result)
         
