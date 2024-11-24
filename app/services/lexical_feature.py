@@ -1,8 +1,3 @@
-"""
-analyzing what the candidate is saying and if their responses align with a good answer 
-for that role and company
-"""
-from nltk.tokenize import word_tokenize 
 import openai
 import re
 
@@ -89,58 +84,3 @@ def preferred_qualification(text, questions, preferred_qual):
         result[i] = score
 
     return result
-
-def sentimental_analysis(text):
-    #hume 
-    return None
-
-#high wpsec, wc, uc --> better candidate
-#low fpsec, filler words, non-fluency words, unvoiced region in speech
-
-"""
-
-
-def verbal_skill(text,interview_length):
-    verbal = {}
-    #tokenize
-    tokenized_text = word_tokenize(text)
-    #data cleaning
-    processed_text = ''
-    verbal['wpsec'] = len(processed_text)/interview_length
-    verbal['upsec'] = 10
-    verbal['wc'] = 10
-    verbal['uc'] = 10
-    verbal['fpsec'] = 10
-    return verbal
-
-
-def pro_count(text):
-    nlp = spacy.load("en_core_web_sm")
-
-    doc = nlp(text)
-    pro_list = {}
-
-    for token in doc:
-        if token.pos_ == "PRON":
-            pro = token.text
-            #print(token.text, token.dep_, token.head.text)
-            if pro not in pro_list:
-                pro_list[pro] = 1
-            else:
-                pro_list[pro] += 1
-
-    return pro_list
-
-def lexicon_analysis(text_raw):
-    speech_script = total_speech(text_raw) #string type. full interview script
-
-    sentiment = sentimental_analysis(speech_script) #positive/negative/neutral
-    pronoun = pro_count(speech_script) #list of pronoun
-    #coherence
-
-    speaking_skills = verbal_skill(speech_script, 1800) #30 minutes
-
-    lex_analysis = {}
-
-    return lex_analysis
-"""
