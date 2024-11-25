@@ -32,6 +32,7 @@ class DailyVideoDownloader:
         response = requests.get(url, headers=self.headers)
         response.raise_for_status()
         download_link = response.json()["download_link"]
+        print("Sucessfully retrieved download link")
         
         return {
             "download_link": download_link,
