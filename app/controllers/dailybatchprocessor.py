@@ -1,6 +1,3 @@
-from flask import Blueprint, request
-from flask_cors import cross_origin, CORS
-
 import requests
 import time
 import os
@@ -11,8 +8,6 @@ from dataclasses import dataclass
 
 load_dotenv()
 
-bp = Blueprint('transcription', __name__)
-CORS(bp)
 
 @dataclass
 class JobStatus:
@@ -106,7 +101,7 @@ class DailyBatchProcessor:
         response.raise_for_status()
         return response.json()
 
-    def wait_for_completion(self, job_id: str, max_attempts: int = 60, delay: int = 10) -> Optional[Dict]:
+    def wait_for_completion(self, job_id: str, max_attempts: int = 60, initial_delay: float = 0.5) -> Optional[Dict]:
         """
         Poll the job status until it completes or reaches maximum attempts.
         
@@ -118,6 +113,9 @@ class DailyBatchProcessor:
         Returns:
             Dict containing the output access links if successful, None if timed out
         """
+        delay = initial_delay
+        max_delay = 5  # Cap the maximum delay at 5 seconds
+        
         for attempt in range(max_attempts):
             job_status = self.get_job_status(job_id)
             
@@ -127,9 +125,11 @@ class DailyBatchProcessor:
                 raise Exception(f"Job failed with error: {job_status.error}")
             
             # Print progress update
-            print(f"Job status: {job_status.status} (attempt {attempt + 1}/{max_attempts})")
+            print(f"Job status: {job_status.status} (attempt {attempt + 1}/{max_attempts}, delay: {delay:.1f}s)")
             
-            time.sleep(delay)
+            # Short sleep with exponential backoff
+            time.sleep(min(delay, max_delay))
+            delay *= 2  # Double the delay for next attempt
         return None
 
 def process_transcription_job(processor: DailyBatchProcessor, recording_id: str):
