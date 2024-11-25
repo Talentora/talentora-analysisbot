@@ -178,19 +178,27 @@ def process_transcription_job(processor: DailyBatchProcessor, recording_id: str)
                 download_link = txt_transcript["link"]
                 print("Downloading transcript text...")
                 
-                # Download and return the text content
+                # Download and split into lines
                 response = requests.get(download_link)
                 response.raise_for_status()
-                return response.text
+                # Split text into lines and remove empty lines
+                transcript_lines = [
+                    line.strip() 
+                    for line in response.text.split('\n') 
+                    if line.strip()
+                ]
+                return transcript_lines
             else:
-                return "Error: No TXT format transcript found"
+                return ["Error: No TXT format transcript found"]
         else:
-            return "Error: Job timed out or failed to complete"
+            return ["Error: Job timed out or failed to complete"]
             
     except requests.exceptions.HTTPError as e:
         print(f"HTTP Error occurred: {e}")
+        return [f"Error: HTTP Error - {str(e)}"]
     except Exception as e:
         print(f"An error occurred: {e}")
+        return [f"Error: {str(e)}"]
 
 # def main():
 #     api_key = os.environ.get("DAILY_API_KEY")
