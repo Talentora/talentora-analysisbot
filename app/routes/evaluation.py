@@ -12,6 +12,7 @@ from app.services import summarize
 from app.services.sentiment import run_emotion_analysis
 from app.controllers.supabase_db import SupabaseDB
 from app.controllers.dailybatchprocessor import DailyBatchProcessor, process_transcription_job
+from app.controllers.recording_link import DailyVideoDownloader
 
 load_dotenv()
 
@@ -85,23 +86,24 @@ def handle_webhook():
             
             # Initialize the batch processor
             batch_processor = DailyBatchProcessor(api_key)
+            downloader = DailyVideoDownloader(api_key)
             
             # Process the transcription with the recording ID
             text_raw = process_transcription_job(batch_processor, recording_id)
+            result = downloader.get_download_link(recording_id)
             supabase_condition = ["id",recording_id]
-            job_id = SupabaseDB.get_supabase_data("applications","job_id",supabase_condition)
+            # job_id = SupabaseDB.get_supabase_data("applications","job_id",supabase_condition)
             
             print(text_raw)
                         
             # Get necessary data from Supabase
-            job_condition = ["job_id",job_id]
-            questions = SupabaseDB.get_supabase_data("job_interview_config","interview_questions",job_condition)
-            min_qual = SupabaseDB.get_supabase_data("job_interview_config","min_qual",job_condition)
-            preferred_qual = SupabaseDB.get_supabase_data("job_interview_config","preferred_qual",job_condition)
-            media_url = SupabaseDB.get_supabase_data("job_interview_config","preferred_qual",job_condition)
-            media_urls = ["video download link",
-                        "text file"
-                        ]
+            # job_condition = ["job_id",job_id]
+            # questions = SupabaseDB.get_supabase_data("job_interview_config","interview_questions",job_condition)
+            # min_qual = SupabaseDB.get_supabase_data("job_interview_config","min_qual",job_condition)
+            # preferred_qual = SupabaseDB.get_supabase_data("job_interview_config","preferred_qual",job_condition)
+            # media_url = SupabaseDB.get_supabase_data("job_interview_config","preferred_qual",job_condition)
+            
+            media_urls = [result['download_link']]
             models = {
                 "face": {},
                 "language": {},
@@ -109,20 +111,21 @@ def handle_webhook():
             }
 
             # Calculate interview evaluation
-            evaluation_id = str(uuid())
-            text_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
-            emotion_eval = run_emotion_analysis(media_urls, models)
-            interview_summary = summarize.dialogue_processing(text_raw, questions)
+            # evaluation_id = str(uuid())
+            # text_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
+            emotion_eval = run_emotion_analysis(media_urls, text_raw, models)
+            # interview_summary = summarize.dialogue_processing(text_raw, questions)
 
             # Send evaluation to Supabase
-            data_to_insert = {"id":evaluation_id,"text_eval":text_eval,"emotion_eval":emotion_eval,"interview_summary":interview_summary}
-            result = SupabaseDB.insert_supabase_data("AI_summary", data_to_insert)
+            # data_to_insert = {"id":evaluation_id,"text_eval":text_eval,"emotion_eval":emotion_eval,"interview_summary":interview_summary}
+            # result = SupabaseDB.insert_supabase_data("AI_summary", data_to_insert)
 
             #update
-            update = {"AI_Summary":evaluation_id}
-            result = SupabaseDB.update_supabase_data("applications", update, supabase_condition)
+            # update = {"AI_Summary":evaluation_id}
+            # result = SupabaseDB.update_supabase_data("applications", update, supabase_condition)
             
-            return handle_success(result)
+            # return handle_success(result)
+            print(emotion_eval)
         
         return jsonify({'error': 'Unsupported event type'}), 400
         
