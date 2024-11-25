@@ -72,9 +72,14 @@ def handle_webhook():
         # Handle initial webhook verification
         if data.get('test') == 'test':
             return jsonify({'status': 'success'}), 200
-            
+        
+        event_type = data.get('type')
+        if event_type == 'recording.started':
+            # Just acknowledge the start
+            return jsonify({'status': 'recording started'}), 200
+        
         # Handle actual webhook event
-        if data.get('type') == 'recording.ready-to-download':
+        elif event_type == 'recording.ready-to-download':
             # Extract the recording ID from the payload
             recording_id = data['payload']['recording_id']
             
