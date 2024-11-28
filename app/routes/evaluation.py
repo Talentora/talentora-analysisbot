@@ -61,7 +61,7 @@ def handle_webhook():
         # Get headers for verification
         timestamp = request.headers.get('X-Webhook-Timestamp')
         signature = request.headers.get('X-Webhook-Signature')
-        
+                
         # Verify signature if present
         if timestamp and signature:
             if not verify_webhook_signature(timestamp, raw_body, signature):
@@ -86,10 +86,19 @@ def handle_webhook():
             
             # Initialize the batch processor
             batch_processor = DailyBatchProcessor(api_key)
+            job_response = batch_processor.submit_transcript_job(recording_id)
+            job_id = job_response["id"]
+            
+            return jsonify({'status': f'batch processor job started with id: {job_id}'}), 200
+         
+        elif event_type == 'batch-processor.job-finished':
+            # Extract the job ID from the payload
+            job_id = data['payload']['id']
+            text_raw = process_transcription_job(batch_processor, job_id)
+
             downloader = DailyVideoDownloader(api_key)
             
             # Process the transcription with the recording ID
-            text_raw = process_transcription_job(batch_processor, recording_id)
             result = downloader.get_download_link(recording_id)
             supabase_condition = ["id",recording_id]
             # job_id = SupabaseDB.get_supabase_data("applications","job_id",supabase_condition)
