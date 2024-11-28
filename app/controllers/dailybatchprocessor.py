@@ -101,51 +101,15 @@ class DailyBatchProcessor:
         response.raise_for_status()
         return response.json()
 
-    def wait_for_completion(self, job_id: str, max_attempts: int = 60, initial_delay: float = 0.5) -> Optional[Dict]:
-        """
-        Poll the job status until it completes or reaches maximum attempts.
-        
-        Args:
-            job_id: The ID of the submitted job
-            max_attempts: Maximum number of polling attempts
-            delay: Delay in seconds between polling attempts
-            
-        Returns:
-            Dict containing the output access links if successful, None if timed out
-        """
-        delay = initial_delay
-        max_delay = 5  # Cap the maximum delay at 5 seconds
-        
-        for attempt in range(max_attempts):
-            job_status = self.get_job_status(job_id)
-            
-            if job_status.status == "finished":
-                return self.get_access_links(job_id)
-            elif job_status.status == "error":
-                raise Exception(f"Job failed with error: {job_status.error}")
-            
-            # Print progress update
-            print(f"Job status: {job_status.status} (attempt {attempt + 1}/{max_attempts}, delay: {delay:.1f}s)")
-            
-            # Short sleep with exponential backoff
-            time.sleep(min(delay, max_delay))
-            delay *= 2  # Double the delay for next attempt
-        return None
 
-def process_transcription_job(processor: DailyBatchProcessor, recording_id: str):
+def process_transcription_job(processor: DailyBatchProcessor, job_id: str):
     """
     Process a complete transcription job workflow.
     """
     try:
-        # Submit the transcription job
-        print("Submitting transcription job...")
-        job_response = processor.submit_transcript_job(recording_id)
-        job_id = job_response["id"]
-        print(f"Job submitted successfully. Job ID: {job_id}")
-        
         # Wait for job completion and get access links
-        print("Waiting for job completion...")
-        output = processor.wait_for_completion(job_id)
+        print("Job Completed")
+        output = processor.get_access_links(job_id)
         
         # if output:
         #     print("\nTranscription completed successfully!")
