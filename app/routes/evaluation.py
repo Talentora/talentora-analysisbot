@@ -93,6 +93,7 @@ def handle_webhook():
          
         elif event_type == 'batch-processor.job-finished':
             # Extract the job ID from the payload
+            print('Batch processor job finished')
             job_id = data['payload']['id']
             text_raw = process_transcription_job(batch_processor, job_id)
 
@@ -137,6 +138,7 @@ def handle_webhook():
             
             # return handle_success(result)
             print(emotion_eval)
+            return jsonify({'status': f'batch processor job finished with id: {job_id}'}), 200
         
         return jsonify({'error': 'Unsupported event type'}), 400
         
