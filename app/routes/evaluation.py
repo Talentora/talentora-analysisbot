@@ -95,19 +95,19 @@ def handle_webhook():
             # Extract the job ID from the payload
             print('Batch processor job finished')
             job_id = data['payload']['id']
+            print(job_id)
             text_raw = process_transcription_job(batch_processor, job_id)
-
+            print(text_raw)
             downloader = DailyVideoDownloader(api_key)
             
             recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
             
             # Process the transcription with the recording ID
             result = downloader.get_download_link(recording_id)
+            print(result['download_link'])
             supabase_condition = ["id",recording_id]
             # job_id = SupabaseDB.get_supabase_data("applications","job_id",supabase_condition)
-            
-            print(text_raw)
-                        
+                                    
             # Get necessary data from Supabase
             # job_condition = ["job_id",job_id]
             # questions = SupabaseDB.get_supabase_data("job_interview_config","interview_questions",job_condition)
