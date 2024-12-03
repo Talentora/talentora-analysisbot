@@ -98,6 +98,8 @@ def handle_webhook():
 
             downloader = DailyVideoDownloader(api_key)
             
+            recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
+            
             # Process the transcription with the recording ID
             result = downloader.get_download_link(recording_id)
             supabase_condition = ["id",recording_id]
