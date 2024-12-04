@@ -194,6 +194,7 @@ class DailyBatchProcessor:
                         for line in response.text.split('\n') 
                         if line.strip()
                     ]
+                    print("".join(summary_lines))
                     return "".join(summary_lines)
                 else:
                     return ["Error: No TXT format summary found"]

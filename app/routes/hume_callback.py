@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin, CORS
 from hume import HumeClient
+from app.configs.daily_config import DAILY_API_KEY
 from app.configs.hume_config import HUME_API_KEY
+from app.controllers.dailybatchprocessor import DailyBatchProcessor
 from app.controllers.hume_job_manager import JobManager
 from app.services.sentiment_analysis import EmotionAnalyzer
 from app.controllers.supabase_db import SupabaseDB
@@ -22,6 +24,7 @@ def hume_callback():
             return jsonify({'error': 'job_id not provided in callback'}), 400
 
         # Initialize components
+        batch_processor = DailyBatchProcessor(DAILY_API_KEY)
         client = HumeClient(api_key=HUME_API_KEY)
         job_manager = JobManager(client)
         emotion_analyzer = EmotionAnalyzer(HUME_API_KEY)
@@ -35,12 +38,14 @@ def hume_callback():
 
         # Process predictions
         results = emotion_analyzer.process_predictions(predictions)
+        summary = batch_processor.process_summary_job(job_id)
         
-        emotion_data = {"emotion_eval": results}
-
+        data_to_insert = {
+            "emotion_eval": results,
+            "interview_summary": summary
+        }
         # Upload results to Supabase
-        # save_emotion_analysis_results(job_id, results)  # Implement this function
-        database.insert_supabase_data("AI_summary", emotion_data)
+        database.insert_supabase_data("AI_summary", data_to_insert)
         print(results)
 
         return jsonify({'status': 'success'}), 200
