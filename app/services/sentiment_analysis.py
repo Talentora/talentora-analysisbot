@@ -24,9 +24,6 @@ class EmotionAnalyzer:
             elif weight < 0:
                 min_possible += weight
 
-        if max_possible - min_possible == 0:
-            return 5.0
-
         normalized_score = 10 * (total - min_possible) / (max_possible - min_possible)
         return round(max(0, min(10, normalized_score)), 2)
 

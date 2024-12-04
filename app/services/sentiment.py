@@ -4,31 +4,17 @@ from app.services.sentiment_analysis import EmotionAnalyzer
 from app.controllers.hume_job_manager import JobManager
 from hume import HumeClient
 
-def run_emotion_analysis(media_urls: List[str], text: List[str], models: Dict):
-    """Main function to run emotion analysis on media files."""
-    # Initialize components
+def run_emotion_analysis(media_urls: List[str], text: List[str], models: Dict, callback_url: str):
+    """Start the emotion analysis job with a callback URL."""
     client = HumeClient(api_key=HUME_API_KEY)
     job_manager = JobManager(client)
-    emotion_analyzer = EmotionAnalyzer(HUME_API_KEY)
-
-    # Start job
-    job_id = job_manager.start_job(urls=media_urls, text=text, models=models)
+    print("before start job function")
+    job_id = job_manager.start_job(urls=media_urls, text=text, models=models, callback_url=callback_url)
+    print("after start job function")
     if not job_id:
         return None
 
-    # Monitor job
-    status = job_manager.monitor_job(job_id)
-    if status != "COMPLETED":
-        print("Job failed or was interrupted")
-        return None
-
-    # Get predictions and analyze
-    predictions = job_manager.get_job_predictions(job_id)
-    if not predictions:
-        return None
-
-    # Process and return results
-    return emotion_analyzer.process_predictions(predictions)
+    return job_id
 
 
 # def main():
