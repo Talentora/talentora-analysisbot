@@ -1,4 +1,4 @@
-# config.py
+# hume_config.py
 import os
 from dotenv import load_dotenv
 
