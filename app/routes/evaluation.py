@@ -96,7 +96,6 @@ def handle_webhook():
             
             # Process the transcription with the recording ID
             result = downloader.get_download_link(recording_id)
-            print(result['download_link'])
             # job_id = SupabaseDB.get_supabase_data("applications","job_id",supabase_condition)
                                     
             # Get necessary data from Supabase

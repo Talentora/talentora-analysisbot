@@ -174,15 +174,12 @@ class DailyBatchProcessor:
             print("sucessfully got access link")
             
             if output and "summary" in output:
-                # Find the TXT format transcript
-                txt_summary = next(
-                    (t for t in output["summary"] if t["format"] == "txt"),
-                    None
-                )
+                # Find the TXT format summary
+                summary_info = output["summary"]
                 
-                if txt_summary:
+                if summary_info:
                     # Get the download link for the TXT file
-                    download_link = txt_summary["link"]
+                    download_link = summary_info["link"]
                     print("Downloading summary text...")
                     
                     # Download and split into lines
@@ -218,9 +215,9 @@ def main():
     recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
     
     processor = DailyBatchProcessor(api_key)
-    job_response = processor.submit_batch_processor_job(recording_id)
-    job_id = job_response["id"]
-    print(processor.process_transcription_job(job_id))
+    # job_response = processor.submit_batch_processor_job(recording_id)
+    # job_id = job_response["id"]
+    print(processor.process_summary_job("d55396e3-4125-48ef-b185-2da7f6178a9e"))
 
 if __name__ == "__main__":
     main()
