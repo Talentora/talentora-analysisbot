@@ -4,6 +4,7 @@ from hume import HumeClient
 from app.configs.hume_config import HUME_API_KEY
 from app.controllers.hume_job_manager import JobManager
 from app.services.sentiment_analysis import EmotionAnalyzer
+from app.controllers.supabase_db import SupabaseDB
 
 bp_hume = Blueprint('hume_callback', __name__)
 CORS(bp_hume)
@@ -24,6 +25,7 @@ def hume_callback():
         client = HumeClient(api_key=HUME_API_KEY)
         job_manager = JobManager(client)
         emotion_analyzer = EmotionAnalyzer(HUME_API_KEY)
+        database = SupabaseDB
 
         # Get predictions
         predictions = job_manager.get_job_predictions(job_id)
@@ -33,9 +35,12 @@ def hume_callback():
 
         # Process predictions
         results = emotion_analyzer.process_predictions(predictions)
+        
+        emotion_data = {"emotion_eval": results}
 
-        # Save or process the results as needed
+        # Upload results to Supabase
         # save_emotion_analysis_results(job_id, results)  # Implement this function
+        database.insert_supabase_data("AI_summary",emotion_data)
         print(results)
 
         return jsonify({'status': 'success'}), 200

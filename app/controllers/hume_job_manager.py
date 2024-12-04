@@ -1,7 +1,5 @@
 from typing import Dict, List, Optional
-import time
 from hume import HumeClient
-from app.configs.hume_config import HUME_API_KEY
 
 class JobManager:
     def __init__(self, client: HumeClient):

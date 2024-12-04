@@ -1,14 +1,10 @@
-import os
-from supabase import create_client, Client
+from supabase import create_client
 from dotenv import load_dotenv
-
-load_dotenv()
+from app.configs.supabase_config import SUPABASE_URL, SUPABASE_KEY
 
 class SupabaseDB:
     def __init__(self):
-        self.url: str = os.environ.get("SUPABASE_URL")
-        self.key: str = os.environ.get("SUPABASE_KEY")
-        self.client: Client = create_client(self.url, self.key)
+        self.client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
     def get_supabase_data(self, table: str, select_target: str, condition: list = None):
         """
@@ -20,18 +16,28 @@ class SupabaseDB:
         response = query.execute()
         return response
 
-    def insert_supabase_data(self, table: str, data_for_insert: dict):
+    def insert_supabase_data(self, table: str, data_for_insert: dict) -> dict:
         """
         Insert data into the given table.
+        
+        Args:
+            table (str): The name of the table to insert into
+            data_for_insert (dict): The data to insert
+            
+        Returns:
+            dict: Response data or error message
         """
         try:
             response = self.client.table(table).insert(data_for_insert).execute()
-            if response.data:
-                return response.data
-            else:
-                return {"error": "No data inserted."}
+            
+            # Check if insert was successful
+            if response and response.data:
+                return {"success": True, "data": response.data[0]}
+            
+            return {"success": False, "error": "No data inserted"}
+            
         except Exception as e:
-            return {"error": str(e)}
+            return {"success": False, "error": str(e)}
 
     def update_supabase_data(self, table: str, data_for_update: dict, condition: list):
         """
