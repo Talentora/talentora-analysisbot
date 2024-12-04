@@ -197,16 +197,16 @@ class DailyBatchProcessor:
                     print("".join(summary_lines))
                     return "".join(summary_lines)
                 else:
-                    return ["Error: No TXT format summary found"]
+                    return "Error: No TXT format summary found"
             else:
-                return ["Error: Job timed out or failed to complete"]
+                return "Error: Job timed out or failed to complete"
                 
         except requests.exceptions.HTTPError as e:
             print(f"HTTP Error occurred: {e}")
-            return [f"Error: HTTP Error - {str(e)}"]
+            return f"Error: HTTP Error - {str(e)}"
         except Exception as e:
             print(f"An error occurred: {e}")
-            return [f"Error: {str(e)}"]
+            return f"Error: {str(e)}"
 
 def main():
     api_key = os.environ.get("DAILY_API_KEY")

@@ -16,7 +16,6 @@ CORS(bp_hume)
 def hume_callback():
     try:
         data = request.get_json()
-        print(f"Received Hume callback data: {data}")
 
         # Extract job_id from the callback data
         job_id = data.get('job_id')
