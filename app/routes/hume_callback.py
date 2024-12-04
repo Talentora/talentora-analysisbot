@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin, CORS
 from hume import HumeClient
 from app.configs.hume_config import HUME_API_KEY
 from app.controllers.hume_job_manager import JobManager
@@ -11,8 +12,10 @@ load_dotenv()
 api_key=os.environ.get("HUME_API_KEY")
 
 bp_hume_callback = Blueprint('hume_callback', __name__)
+CORS(bp_hume_callback)
 
 @bp_hume_callback.route('/hume-callback', methods=['POST'])
+@cross_origin()
 def hume_callback():
     try:
         data = request.get_json()
