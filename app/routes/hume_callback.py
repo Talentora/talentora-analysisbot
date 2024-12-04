@@ -25,7 +25,7 @@ def hume_callback():
         client = HumeClient(api_key=HUME_API_KEY)
         job_manager = JobManager(client)
         emotion_analyzer = EmotionAnalyzer(HUME_API_KEY)
-        database = SupabaseDB
+        database = SupabaseDB()
 
         # Get predictions
         predictions = job_manager.get_job_predictions(job_id)
@@ -40,7 +40,7 @@ def hume_callback():
 
         # Upload results to Supabase
         # save_emotion_analysis_results(job_id, results)  # Implement this function
-        database.insert_supabase_data("AI_summary",emotion_data)
+        database.insert_supabase_data("AI_summary", emotion_data)
         print(results)
 
         return jsonify({'status': 'success'}), 200
