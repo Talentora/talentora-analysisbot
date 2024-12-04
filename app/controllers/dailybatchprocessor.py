@@ -164,19 +164,19 @@ def process_transcription_job(processor: DailyBatchProcessor, job_id: str):
         print(f"An error occurred: {e}")
         return [f"Error: {str(e)}"]
 
-# def main():
-#     api_key = os.environ.get("DAILY_API_KEY")
-#     if not api_key:
-#         print("Error: DAILY_API_KEY not found in environment variables")
-#         print("Please ensure you have created a .env file with your API key")
-#         return
+def main():
+    api_key = os.environ.get("DAILY_API_KEY")
+    if not api_key:
+        print("Error: DAILY_API_KEY not found in environment variables")
+        print("Please ensure you have created a .env file with your API key")
+        return
             
-#     recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
+    recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
     
-#     processor = DailyBatchProcessor(api_key)
-#     job_response = processor.submit_transcript_job(recording_id)
-#     job_id = job_response["id"]
-#     print(process_transcription_job(processor, job_id))
+    processor = DailyBatchProcessor(api_key)
+    job_response = processor.submit_transcript_job(recording_id)
+    job_id = job_response["id"]
+    print(process_transcription_job(processor, job_id))
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
