@@ -20,6 +20,7 @@ def hume_callback():
 
         # Extract job_id from the callback data
         job_id = data.get('job_id')
+        analysis_id = request.args.get('analysis_id')
         if not job_id:
             return jsonify({'error': 'job_id not provided in callback'}), 400
 
@@ -38,15 +39,14 @@ def hume_callback():
 
         # Process predictions
         results = emotion_analyzer.process_predictions(predictions)
-        summary = batch_processor.process_summary_job(job_id)
         
-        data_to_insert = {
+        update_data = {
             "emotion_eval": results,
-            "interview_summary": summary
         }
-        # Upload results to Supabase
-        database.insert_supabase_data("AI_summary", data_to_insert)
-        print(results)
+        
+        # Update the existing record using the analysis_id
+        condition = ["id", analysis_id]
+        database.update_supabase_data("AI_summary", update_data, condition)
 
         return jsonify({'status': 'success'}), 200
 
