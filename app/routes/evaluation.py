@@ -70,6 +70,7 @@ def handle_webhook():
         
         batch_processor = DailyBatchProcessor(api_key)
         downloader = DailyVideoDownloader(api_key)
+        database = SupabaseDB()
 
         # Parse JSON data
         data = request.get_json()
@@ -98,16 +99,18 @@ def handle_webhook():
             # Extract the job ID from the payload
             print('Batch processor job finished')
             job_id = data['payload']['id']
-            print(job_id)
-            text_raw = process_transcription_job(batch_processor, job_id)
-            print(text_raw)
+            text_raw = batch_processor.process_transcription_job(job_id)
+            
+            summary = batch_processor.process_summary_job(job_id)
+            summary_data = {"interview_summary":summary}
+            
+            database.insert_supabase_data("AI_summary", summary_data)
             
             recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
             
             # Process the transcription with the recording ID
             result = downloader.get_download_link(recording_id)
             print(result['download_link'])
-            supabase_condition = ["id",recording_id]
             # job_id = SupabaseDB.get_supabase_data("applications","job_id",supabase_condition)
                                     
             # Get necessary data from Supabase
