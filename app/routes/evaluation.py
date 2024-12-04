@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin, CORS
 import hmac
+import uuid
 import base64
 import hashlib
 from app.configs.daily_config import DAILY_API_KEY, DAILY_WEBHOOK_SECRET
@@ -8,6 +9,7 @@ from ..utils import *
 from app.services import score_calculation
 from app.services import summarize
 from app.services.sentiment import run_emotion_analysis
+from app.controllers.supabase_db import SupabaseDB
 from app.controllers.dailybatchprocessor import DailyBatchProcessor
 from app.controllers.recording_link import DailyVideoDownloader
 
@@ -58,6 +60,7 @@ def handle_webhook():
         
         batch_processor = DailyBatchProcessor(DAILY_API_KEY)
         downloader = DailyVideoDownloader(DAILY_API_KEY)
+        database = SupabaseDB()
 
         # Parse JSON data
         data = request.get_json()
@@ -109,12 +112,20 @@ def handle_webhook():
                 "language": {},
                 "prosody": {}
             }
-
+            
+            analysis_id = str(uuid.uuid4())
+            
+            summary = batch_processor.process_summary_job(job_id)
+            initial_data = {
+                "id": analysis_id,
+                "interview_summary": summary,
+            }
+            database.insert_supabase_data("AI_summary", initial_data)
             # Calculate interview evaluation
             # evaluation_id = str(uuid())
             # text_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
             # publicly accessible callback URL
-            callback_url = 'https://roborecruiter-analysisbot-production.up.railway.app/hume-callback/hume' 
+            callback_url = f'https://roborecruiter-analysisbot-production.up.railway.app/hume-callback/hume?analysis_id={analysis_id}' 
 
             # start emotion analysis job with callback
             emotion_job_id = run_emotion_analysis(media_urls, text_raw, models, callback_url)
