@@ -92,7 +92,7 @@ def handle_webhook():
             
             text_raw = batch_processor.process_transcription_job(job_id)
             
-            recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
+            recording_id = data['payload']['input']['recordingId']
             
             # Process the transcription with the recording ID
             result = downloader.get_download_link(recording_id)
