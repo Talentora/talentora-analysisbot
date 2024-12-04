@@ -90,7 +90,7 @@ def handle_webhook():
             recording_id = data['payload']['recording_id']
             
             # Initialize the batch processor
-            job_response = batch_processor.submit_transcript_job(recording_id)
+            job_response = batch_processor.submit_batch_processor_job(recording_id)
             job_id = job_response["id"]
             
             return jsonify({'status': f'batch processor job started with id: {job_id}'}), 200
@@ -99,11 +99,11 @@ def handle_webhook():
             # Extract the job ID from the payload
             print('Batch processor job finished')
             job_id = data['payload']['id']
+            
             text_raw = batch_processor.process_transcription_job(job_id)
-            
             summary = batch_processor.process_summary_job(job_id)
-            summary_data = {"interview_summary":summary}
             
+            summary_data = {"interview_summary":summary}
             database.insert_supabase_data("AI_summary", summary_data)
             
             recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"

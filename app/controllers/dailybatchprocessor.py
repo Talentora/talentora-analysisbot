@@ -25,7 +25,7 @@ class DailyBatchProcessor:
             "Content-Type": "application/json"
         }
 
-    def submit_transcript_job(self, recording_id: str) -> Dict:
+    def submit_batch_processor_job(self, recording_id: str) -> Dict:
         """
         Submit a job to transcribe an MP4 file using its recording ID.
         
@@ -38,10 +38,7 @@ class DailyBatchProcessor:
         endpoint = f"{self.base_url}/batch-processor"
         
         payload = {
-            "preset": [
-                "transcript",
-                "summary"
-            ],
+            "preset": "summary",
             "inParams": {
                 "sourceType": "recordingId",
                 "recordingId": recording_id
@@ -220,7 +217,7 @@ def main():
     recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
     
     processor = DailyBatchProcessor(api_key)
-    job_response = processor.submit_transcript_job(recording_id)
+    job_response = processor.submit_batch_processor_job(recording_id)
     job_id = job_response["id"]
     print(processor.process_transcription_job(job_id))
 
