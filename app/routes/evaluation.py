@@ -128,7 +128,7 @@ def handle_webhook():
             # evaluation_id = str(uuid())
             # text_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
             # publicly accessible callback URL
-            callback_url = 'https://roborecruiter-analysisbot-production.up.railway.app/hume-callback/hume-callback' 
+            callback_url = 'https://roborecruiter-analysisbot-production.up.railway.app/hume-callback/hume' 
 
             # start emotion analysis job with callback
             emotion_job_id = run_emotion_analysis(media_urls, text_raw, models, callback_url)

@@ -21,6 +21,7 @@ class JobManager:
             "notify": notify
         }
         job_payload = {k: v for k, v in job_payload.items() if v is not None}
+        print(job_payload)
 
         try:
             return self.client.expression_measurement.batch.start_inference_job(**job_payload)
