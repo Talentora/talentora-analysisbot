@@ -127,7 +127,11 @@ def handle_webhook():
             # Calculate interview evaluation
             # evaluation_id = str(uuid())
             # text_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
-            emotion_eval = run_emotion_analysis(media_urls, text_raw, models)
+            # publicly accessible callback URL
+            callback_url = 'https://roborecruiter-analysisbot-production.up.railway.app/hume-callback/hume-callback' 
+
+            # start emotion analysis job with callback
+            emotion_job_id = run_emotion_analysis(media_urls, text_raw, models, callback_url)
             # interview_summary = summarize.dialogue_processing(text_raw, questions)
 
             # Send evaluation to Supabase
@@ -139,11 +143,10 @@ def handle_webhook():
             # result = SupabaseDB.update_supabase_data("applications", update, supabase_condition)
             
             # return handle_success(result)
-            print(emotion_eval)
-            return jsonify({'status': f'batch processor job finished with id: {job_id}'}), 200
+            print(emotion_job_id)
+            return jsonify({'status': f'Emotion analysis job started with ID: {emotion_job_id}'}), 200
         
         return jsonify({'error': 'Unsupported event type'}), 400
         
     except Exception as e:
         return handle_server_error(e)
-

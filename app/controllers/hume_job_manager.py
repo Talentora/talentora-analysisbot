@@ -28,20 +28,6 @@ class JobManager:
             print(f"Error starting job: {e}")
             return None
 
-    def monitor_job(self, job_id: str, interval: int = 10) -> str:
-        """Monitor the job status until completion."""
-        while True:
-            try:
-                job = self.client.expression_measurement.batch.get_job_details(id=job_id)
-                status = job.state.status
-                print(f"Job Status: {status}")
-                if status in ["COMPLETED", "FAILED"]:
-                    return status
-                time.sleep(interval)
-            except Exception as e:
-                print(f"Error monitoring job: {e}")
-                return "FAILED"
-
     def get_job_details(self, job_id: str) -> Optional[Dict]:
         """Get details of a specific job."""
         try:
