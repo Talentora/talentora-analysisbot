@@ -108,8 +108,8 @@ def process_transcription_job(processor: DailyBatchProcessor, job_id: str):
     """
     try:
         # Wait for job completion and get access links
-        print("Job Completed")
         output = processor.get_access_links(job_id)
+        print("sucessfully got access link")
         
         # if output:
         #     print("\nTranscription completed successfully!")
@@ -171,10 +171,12 @@ def process_transcription_job(processor: DailyBatchProcessor, job_id: str):
 #         print("Please ensure you have created a .env file with your API key")
 #         return
             
-#     recording_id = "a299ecbb-b660-4fc2-8913-2caa9715f215"
+#     recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
     
 #     processor = DailyBatchProcessor(api_key)
-#     print(process_transcription_job(processor, recording_id))
+#     job_response = processor.submit_transcript_job(recording_id)
+#     job_id = job_response["id"]
+#     print(process_transcription_job(processor, job_id))
 
 # if __name__ == "__main__":
 #     main()
