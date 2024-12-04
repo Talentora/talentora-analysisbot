@@ -11,7 +11,7 @@ from app.services import score_calculation
 from app.services import summarize
 from app.services.sentiment import run_emotion_analysis
 from app.controllers.supabase_db import SupabaseDB
-from app.controllers.dailybatchprocessor import DailyBatchProcessor, process_transcription_job
+from app.controllers.dailybatchprocessor import DailyBatchProcessor
 from app.controllers.recording_link import DailyVideoDownloader
 
 load_dotenv()
