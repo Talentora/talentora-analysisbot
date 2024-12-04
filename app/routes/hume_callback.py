@@ -24,7 +24,6 @@ def hume_callback():
             return jsonify({'error': 'job_id not provided in callback'}), 400
 
         # Initialize components
-        batch_processor = DailyBatchProcessor(DAILY_API_KEY)
         client = HumeClient(api_key=HUME_API_KEY)
         job_manager = JobManager(client)
         emotion_analyzer = EmotionAnalyzer(HUME_API_KEY)
