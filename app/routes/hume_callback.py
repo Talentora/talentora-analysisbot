@@ -1,5 +1,3 @@
-import os
-from dotenv import load_dotenv
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin, CORS
 from hume import HumeClient
@@ -7,14 +5,10 @@ from app.configs.hume_config import HUME_API_KEY
 from app.controllers.hume_job_manager import JobManager
 from app.services.sentiment_analysis import EmotionAnalyzer
 
-load_dotenv()
+bp_hume = Blueprint('hume_callback', __name__)
+CORS(bp_hume)
 
-api_key=os.environ.get("HUME_API_KEY")
-
-bp_hume_callback = Blueprint('hume_callback', __name__)
-CORS(bp_hume_callback)
-
-@bp_hume_callback.route('/hume-callback', methods=['POST'])
+@bp_hume.route('/hume', methods=['POST'])
 @cross_origin()
 def hume_callback():
     try:
@@ -27,9 +21,9 @@ def hume_callback():
             return jsonify({'error': 'job_id not provided in callback'}), 400
 
         # Initialize components
-        client = HumeClient(api_key=api_key)
+        client = HumeClient(api_key=HUME_API_KEY)
         job_manager = JobManager(client)
-        emotion_analyzer = EmotionAnalyzer(api_key)
+        emotion_analyzer = EmotionAnalyzer(HUME_API_KEY)
 
         # Get predictions
         predictions = job_manager.get_job_predictions(job_id)
