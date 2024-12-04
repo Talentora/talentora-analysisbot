@@ -38,10 +38,10 @@ class DailyBatchProcessor:
         endpoint = f"{self.base_url}/batch-processor"
         
         payload = {
-            "preset": {
+            "preset": [
                 "transcript",
                 "summary"
-            },
+            ],
             "inParams": {
                 "sourceType": "recordingId",
                 "recordingId": recording_id
