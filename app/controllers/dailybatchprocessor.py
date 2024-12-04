@@ -38,14 +38,14 @@ class DailyBatchProcessor:
         endpoint = f"{self.base_url}/batch-processor"
         
         payload = {
-            "preset": "summary",
+            "preset": "summarize",
             "inParams": {
                 "sourceType": "recordingId",
                 "recordingId": recording_id
             },
             "outParams": {
                 "s3Config": {
-                    "s3KeyTemplate": "transcript"
+                    "s3KeyTemplate": "summary"
                 }
             }
         }
