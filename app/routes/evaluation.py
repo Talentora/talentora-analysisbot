@@ -67,6 +67,10 @@ def handle_webhook():
             if not verify_webhook_signature(timestamp, raw_body, signature):
                 return jsonify({'error': 'Invalid signature'}), 401
         
+        
+        batch_processor = DailyBatchProcessor(api_key)
+        downloader = DailyVideoDownloader(api_key)
+
         # Parse JSON data
         data = request.get_json()
         
@@ -85,7 +89,6 @@ def handle_webhook():
             recording_id = data['payload']['recording_id']
             
             # Initialize the batch processor
-            batch_processor = DailyBatchProcessor(api_key)
             job_response = batch_processor.submit_transcript_job(recording_id)
             job_id = job_response["id"]
             
@@ -98,7 +101,6 @@ def handle_webhook():
             print(job_id)
             text_raw = process_transcription_job(batch_processor, job_id)
             print(text_raw)
-            downloader = DailyVideoDownloader(api_key)
             
             recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
             
