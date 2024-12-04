@@ -1,5 +1,4 @@
-from typing import Dict, List, Optional, Union
-import time
+from typing import Dict, List, Union
 from hume import HumeClient
 from app.configs.hume_config import EMOTION_WEIGHTS
 
@@ -30,72 +29,119 @@ class EmotionAnalyzer:
         normalized_score = 10 * (total - min_possible) / (max_possible - min_possible)
         return round(max(0, min(10, normalized_score)), 2)
 
-    def process_predictions(self, predictions) -> Dict[str, Dict[str, Union[float, Dict[str, float]]]]:
+    def process_predictions(self, predictions) -> Dict[str, Dict[str, Union[float, Dict[str, float], List[Dict]]]]:
         """
         Process predictions and return accumulated emotion scores.
         """
-        face_accumulated_emotions = {}
-        prosody_accumulated_emotions = {}
-        language_accumulated_emotions = {}
-        face_frame_count = 0
-        prosody_frame_count = 0
-        language_count = 0
+        face_timeline = []
+        prosody_timeline = []
+        language_timeline = []
+        
+        face_accumulated = {}
+        prosody_accumulated = {}
+        language_accumulated = {}
+        counts = {'face': 0, 'prosody': 0, 'language': 0}
 
         for prediction in predictions:
             for result in prediction.results.predictions:
                 # Process Face Model Predictions
                 if result.models.face:
-                    for face in result.models.face.grouped_predictions:
-                        for pred in face.predictions:
+                    for group in result.models.face.grouped_predictions:
+                        for pred in group.predictions:
                             emotions = {emotion.name: emotion.score for emotion in pred.emotions}
+                            face_timeline.append({
+                                'time': pred.time,  # Time in seconds
+                                'frame': pred.frame,
+                                'emotions': emotions,
+                                'aggregate_score': self.aggregate_emotion_score(emotions),
+                                'id': group.id  # Track individual faces
+                            })
+                            
                             for emotion, score in emotions.items():
-                                face_accumulated_emotions[emotion] = face_accumulated_emotions.get(emotion, 0.0) + score
-                            face_frame_count += 1
+                                face_accumulated[emotion] = face_accumulated.get(emotion, 0.0) + score
+                            counts['face'] += 1
 
                 # Process Prosody Model Predictions
                 if result.models.prosody:
-                    for prosody in result.models.prosody.grouped_predictions:
-                        for pred in prosody.predictions:
+                    for group in result.models.prosody.grouped_predictions:
+                        for pred in group.predictions:
                             emotions = {emotion.name: emotion.score for emotion in pred.emotions}
+                            prosody_timeline.append({
+                                'time_start': pred.time.begin,
+                                'time_end': pred.time.end,
+                                'emotions': emotions,
+                                'aggregate_score': self.aggregate_emotion_score(emotions),
+                                'id': group.id,
+                                'text': getattr(pred, 'text', None)
+                            })
+                            
                             for emotion, score in emotions.items():
-                                prosody_accumulated_emotions[emotion] = prosody_accumulated_emotions.get(emotion, 0.0) + score
-                            prosody_frame_count += 1
-                                
+                                prosody_accumulated[emotion] = prosody_accumulated.get(emotion, 0.0) + score
+                            counts['prosody'] += 1
+
+                # Process Language Model Predictions
                 if result.models.language:
-                    for language in result.models.language.grouped_predictions:
-                        for pred in language.predictions:
+                    for group in result.models.language.grouped_predictions:
+                        for pred in group.predictions:
                             emotions = {emotion.name: emotion.score for emotion in pred.emotions}
+                            entry = {
+                                'emotions': emotions,
+                                'aggregate_score': self.aggregate_emotion_score(emotions),
+                                'text': pred.text,
+                                'position': {
+                                    'begin': pred.position.begin,
+                                    'end': pred.position.end
+                                }
+                            }
+                            
+                            # Add time information if available
+                            if hasattr(pred, 'time') and pred.time:
+                                entry['time_start'] = pred.time.begin
+                                entry['time_end'] = pred.time.end
+                                
+                            language_timeline.append(entry)
+                            
                             for emotion, score in emotions.items():
-                                language_accumulated_emotions[emotion] = language_accumulated_emotions.get(emotion, 0.0) + score
-                            language_count += 1
+                                language_accumulated[emotion] = language_accumulated.get(emotion, 0.0) + score
+                            counts['language'] += 1
 
-        if face_frame_count == 0 and prosody_frame_count == 0 and language_count == 0:
-            return {}
-
-        # Calculate average emotions
-        face_average_emotions = {emotion: total_score / face_frame_count 
-                               for emotion, total_score in face_accumulated_emotions.items()}
-        prosody_average_emotions = {emotion: total_score / prosody_frame_count
-                                  for emotion, total_score in prosody_accumulated_emotions.items()}
-        language_average_emotions = {emotion: total_score / language_count
-                                     for emotion, total_score in language_accumulated_emotions.items()}
+        # Calculate averages
+        averages = {
+            'face': {
+                emotion: score / counts['face'] 
+                for emotion, score in face_accumulated.items()
+            } if counts['face'] > 0 else {},
+            'prosody': {
+                emotion: score / counts['prosody']
+                for emotion, score in prosody_accumulated.items()
+            } if counts['prosody'] > 0 else {},
+            'language': {
+                emotion: score / counts['language']
+                for emotion, score in language_accumulated.items()
+            } if counts['language'] > 0 else {}
+        }
 
         return {
-            'face': {
-                'average_emotions': face_average_emotions,
-                'aggregate_score': self.aggregate_emotion_score(face_average_emotions)
+            'timeline': {
+                'face': sorted(face_timeline, key=lambda x: x['time']),
+                'prosody': sorted(prosody_timeline, key=lambda x: x['time_start']),
+                'language': sorted(language_timeline, key=lambda x: x.get('time_start', x['position']['begin']))
             },
-            'prosody': {
-                'average_emotions': prosody_average_emotions,
-                'aggregate_score': self.aggregate_emotion_score(prosody_average_emotions)
-            },
-            'language': {
-                'average_emotions': language_average_emotions,
-                'aggregate_score': self.aggregate_emotion_score(language_average_emotions)
+            'averages': {
+                'face': {
+                    'emotions': averages['face'],
+                    'aggregate_score': self.aggregate_emotion_score(averages['face']) if averages['face'] else 0
+                },
+                'prosody': {
+                    'emotions': averages['prosody'],
+                    'aggregate_score': self.aggregate_emotion_score(averages['prosody']) if averages['prosody'] else 0
+                },
+                'language': {
+                    'emotions': averages['language'],
+                    'aggregate_score': self.aggregate_emotion_score(averages['language']) if averages['language'] else 0
+                }
             },
             'metadata': {
-                'face_frame_count': face_frame_count,
-                'prosody_frame_count': prosody_frame_count,
-                'language_count': language_count
+                'counts': counts
             }
         }
