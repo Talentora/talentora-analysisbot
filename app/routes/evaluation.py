@@ -118,7 +118,7 @@ def handle_webhook():
             summary = batch_processor.process_summary_job(job_id)
             initial_data = {
                 "id": analysis_id,
-                "interview_summary": summary,
+                "interview_summary": {"content": summary},
             }
             database.insert_supabase_data("AI_summary", initial_data)
             # Calculate interview evaluation
