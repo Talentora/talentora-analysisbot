@@ -5,7 +5,7 @@ from pathlib import Path
 
 load_dotenv()
 
-class DailyVideoDownloader:
+class DailyVideoDownloaderDownload:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.headers = {
@@ -91,10 +91,10 @@ def main():
         return
 
     # Initialize downloader
-    downloader = DailyVideoDownloader(api_key)
+    downloader = DailyVideoDownloaderDownload(api_key)
     
     # Specify recording ID
-    recording_id = "1dd0c3e0-433d-4d90-ae85-da826137f476"
+    recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
     
     try:
         # Download the recording

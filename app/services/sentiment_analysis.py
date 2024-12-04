@@ -37,7 +37,9 @@ class EmotionAnalyzer:
         face_accumulated_emotions = {}
         prosody_accumulated_emotions = {}
         language_accumulated_emotions = {}
-        frame_count = 0
+        face_frame_count = 0
+        prosody_frame_count = 0
+        language_count = 0
 
         for prediction in predictions:
             for result in prediction.results.predictions:
@@ -48,7 +50,7 @@ class EmotionAnalyzer:
                             emotions = {emotion.name: emotion.score for emotion in pred.emotions}
                             for emotion, score in emotions.items():
                                 face_accumulated_emotions[emotion] = face_accumulated_emotions.get(emotion, 0.0) + score
-                            frame_count += 1
+                            face_frame_count += 1
 
                 # Process Prosody Model Predictions
                 if result.models.prosody:
@@ -57,23 +59,25 @@ class EmotionAnalyzer:
                             emotions = {emotion.name: emotion.score for emotion in pred.emotions}
                             for emotion, score in emotions.items():
                                 prosody_accumulated_emotions[emotion] = prosody_accumulated_emotions.get(emotion, 0.0) + score
+                            prosody_frame_count += 1
                                 
                 if result.models.language:
-                    for prosody in result.models.language.grouped_predictions:
-                        for pred in prosody.predictions:
+                    for language in result.models.language.grouped_predictions:
+                        for pred in language.predictions:
                             emotions = {emotion.name: emotion.score for emotion in pred.emotions}
                             for emotion, score in emotions.items():
-                                prosody_accumulated_emotions[emotion] = prosody_accumulated_emotions.get(emotion, 0.0) + score
+                                language_accumulated_emotions[emotion] = language_accumulated_emotions.get(emotion, 0.0) + score
+                            language_count += 1
 
-        if frame_count == 0:
+        if face_frame_count == 0 and prosody_frame_count == 0 and language_count == 0:
             return {}
 
         # Calculate average emotions
-        face_average_emotions = {emotion: total_score / frame_count 
+        face_average_emotions = {emotion: total_score / face_frame_count 
                                for emotion, total_score in face_accumulated_emotions.items()}
-        prosody_average_emotions = {emotion: total_score / frame_count 
+        prosody_average_emotions = {emotion: total_score / prosody_frame_count
                                   for emotion, total_score in prosody_accumulated_emotions.items()}
-        language_average_emotions = {emotion: total_score / frame_count
+        language_average_emotions = {emotion: total_score / language_count
                                      for emotion, total_score in language_accumulated_emotions.items()}
 
         return {
@@ -90,6 +94,8 @@ class EmotionAnalyzer:
                 'aggregate_score': self.aggregate_emotion_score(language_average_emotions)
             },
             'metadata': {
-                'frame_count': frame_count
+                'face_frame_count': face_frame_count,
+                'prosody_frame_count': prosody_frame_count,
+                'language_count': language_count
             }
         }
