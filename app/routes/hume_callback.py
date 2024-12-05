@@ -1,12 +1,11 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin, CORS
 from hume import HumeClient
-from app.configs.daily_config import DAILY_API_KEY
 from app.configs.hume_config import HUME_API_KEY
-from app.controllers.dailybatchprocessor import DailyBatchProcessor
 from app.controllers.hume_job_manager import JobManager
 from app.services.sentiment_analysis import EmotionAnalyzer
 from app.controllers.supabase_db import SupabaseDB
+from app.services.score_calculation import lexical_eval
 
 bp_hume = Blueprint('hume_callback', __name__)
 CORS(bp_hume)
@@ -36,10 +35,10 @@ def hume_callback():
             return jsonify({'status': 'no predictions'}), 200
 
         # Process predictions
-        results = emotion_analyzer.process_predictions(predictions)
-        
+        emotion_results = emotion_analyzer.process_predictions(predictions)
+                
         update_data = {
-            "emotion_eval": results,
+            "emotion_eval": emotion_results,
         }
         
         # Update the existing record using the analysis_id

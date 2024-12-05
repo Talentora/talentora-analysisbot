@@ -205,19 +205,19 @@ class DailyBatchProcessor:
             print(f"An error occurred: {e}")
             return f"Error: {str(e)}"
 
-def main():
-    api_key = os.environ.get("DAILY_API_KEY")
-    if not api_key:
-        print("Error: DAILY_API_KEY not found in environment variables")
-        print("Please ensure you have created a .env file with your API key")
-        return
+# def main():
+#     api_key = os.environ.get("DAILY_API_KEY")
+#     if not api_key:
+#         print("Error: DAILY_API_KEY not found in environment variables")
+#         print("Please ensure you have created a .env file with your API key")
+#         return
             
-    recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
+#     recording_id = "cf6bcc01-14ac-48d5-9473-bbc516522e1c"
     
-    processor = DailyBatchProcessor(api_key)
-    # job_response = processor.submit_batch_processor_job(recording_id)
-    # job_id = job_response["id"]
-    print(processor.process_summary_job("d55396e3-4125-48ef-b185-2da7f6178a9e"))
+#     processor = DailyBatchProcessor(api_key)
+#     job_response = processor.submit_batch_processor_job(recording_id)
+#     job_id = job_response["id"]
+#     print(processor.process_summary_job(job_id))
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
