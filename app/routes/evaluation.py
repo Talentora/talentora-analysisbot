@@ -82,6 +82,13 @@ def handle_webhook():
         elif event_type == 'recording.ready-to-download':
             # Extract the recording ID from the payload
             recording_id = data['payload']['recording_id']
+            room_name = data['payload']['room_name']
+            
+            insert_recording_id = {
+                'recording_id': recording_id
+            }
+            
+            database.update_supabase_data("AI_summary", insert_recording_id, ['room_name', room_name])
             
             # Initialize the batch processor
             job_response = batch_processor.submit_batch_processor_job(recording_id)
@@ -97,7 +104,6 @@ def handle_webhook():
             text_raw = batch_processor.process_transcription_job(job_id)
             
             recording_id = data['payload']['input']['recordingId']
-            
             # Process the transcription with the recording ID
             result = downloader.get_download_link(recording_id)
             # job_id = SupabaseDB.get_supabase_data("applications","job_id",supabase_condition)
@@ -115,9 +121,7 @@ def handle_webhook():
                 "language": {},
                 "prosody": {}
             }
-            
-            analysis_id = str(uuid.uuid4())
-            
+                        
             summary = batch_processor.process_summary_job(job_id)
             
              # insert merge information
@@ -127,16 +131,15 @@ def handle_webhook():
             data_to_insert = response_eval(text_raw, merge_job_description)
 
             initial_data = {
-                "id": analysis_id,
                 "interview_summary": {
                     "content": summary
                     },
                 'text_eval': data_to_insert
             }
-            database.insert_supabase_data("AI_summary", initial_data)
+            database.update_supabase_data("AI_summary", initial_data, ['recording_id', recording_id])
 
             # publicly accessible callback URL
-            callback_url = f'https://roborecruiter-analysisbot-production.up.railway.app/hume-callback/hume?analysis_id={analysis_id}' 
+            callback_url = f'https://roborecruiter-analysisbot-production.up.railway.app/hume-callback/hume?recording_id={recording_id}' 
 
             # start emotion analysis job with callback
             emotion_job_id = run_emotion_analysis(media_urls, text_raw, models, callback_url)
