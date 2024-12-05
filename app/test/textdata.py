@@ -1,12 +1,5 @@
-import sys
-sys.path.append('/Users/seungmincho/Desktop/XC475/roborecruiter-analysisbot/app')
-from services.lexical_feature import text_evaluation
-#behavioral and social skills
-from configs import openai_config
-sys.path.append('/Users/seungmincho/Desktop/XC475/roborecruiter-analysisbot')
-import api_keys
-
-openai_config.configure_openai(api_keys.openai_key)
+from app.services.lexical_feature import text_evaluation
+from app.services.score_calculation import lexical_eval
 
 question1 = "Can you introduce yourself"
 question2 = "Why did you apply to this position"
@@ -37,8 +30,8 @@ badAnswer = [
 min_qual = ["teamwork experience","descriptive answer","solved technical problem","coherency","technical skills"]
 pref_qual = ["project management experience","willingness to learn","communication skills","test driven development","startup experience"]
 
-good_result = text_evaluation(goodAnswer, questions, min_qual, pref_qual)
-bad_result = text_evaluation(badAnswer, questions, min_qual, pref_qual)
+good_result = lexical_eval(goodAnswer, questions, min_qual, pref_qual)
+bad_result = lexical_eval(badAnswer, questions, min_qual, pref_qual)
 
 print("Good Answers Evaluation:")
 print(good_result)
