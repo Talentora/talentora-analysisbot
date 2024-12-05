@@ -1,22 +1,23 @@
+from typing import List
 import openai
 import re
 
 
-def total_speech(text_raw):
+def total_speech(text_raw: List[str]):
     speech_script = ""
     for answer in text_raw:
         speech_script += answer
         speech_script += " "
     return speech_script
 
-def extract_score(answer):
+def extract_score(answer: str):
     match = re.search(r'\b([1-9][0-9]?|100)\b', answer)
     if match:
         return int(match.group(1))
     else:
         return 0  # Default to 0 if score is not found
 
-def text_evaluation(text_raw, questions, min_qual, preferred_qual):
+def text_evaluation(text_raw: List[str], questions: List[str], min_qual: List[str], preferred_qual: List[str]):
     speech_script = total_speech(text_raw)
     result = {
         'minimum_qualification': minimum_qualification(speech_script, questions, min_qual),
@@ -24,8 +25,8 @@ def text_evaluation(text_raw, questions, min_qual, preferred_qual):
     }
     return result
 
-def minimum_qualification(text, questions, min_qual): #min_qual is a list whose elements are string
-    result = [0] * len(min_qual)
+def minimum_qualification(text: str, questions: List[str], min_qual: List[str]): #min_qual is a list whose elements are string
+    result = {}
 
     questions_text = "\n".join([f"Q{i+1}: {question}" for i, question in enumerate(questions)])
 
@@ -40,22 +41,28 @@ def minimum_qualification(text, questions, min_qual): #min_qual is a list whose 
             "\nRespond only with a number from 1 to 100."
         )
 
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+        response = openai.chat.completions.create(
+            model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are an assistant assessing interview responses."},
-                {"role": "user", "content": prompt}
+                {
+                    "role": "system", 
+                    "content": "You are a veteran recruiter skilled at assessing interview responses."
+                },
+                {
+                    "role": "user", 
+                    "content": prompt
+                }
             ]
         )
         #parsing
-        answer = response['choices'][0]['message']['content'].strip()
+        answer = response.choices[0].message.content.strip()
         score = extract_score(answer)
-        result[i] = score
+        result[qualification] = score
 
     return result
 
-def preferred_qualification(text, questions, preferred_qual):
-    result = [0] * len(preferred_qual)
+def preferred_qualification(text: str, questions: List[str], preferred_qual: List[str]):
+    result = {}
 
     questions_text = "\n".join([f"Q{i+1}: {question}" for i, question in enumerate(questions)])
 
@@ -70,17 +77,22 @@ def preferred_qualification(text, questions, preferred_qual):
             "\nRespond only with a number from 1 to 100."
         )
 
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+        response = openai.chat.completions.create(
+            model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are an assistant assessing interview responses."},
-                {"role": "user", "content": prompt}
+                {
+                    "role": "system", 
+                    "content": "You are a veteran recruiter skilled at assessing interview responses."
+                },
+                {
+                    "role": "user", 
+                    "content": prompt
+                }
             ]
         )
-
-        # Parse
-        answer = response['choices'][0]['message']['content'].strip()
+        #parsing
+        answer = response.choices[0].message.content.strip()
         score = extract_score(answer)
-        result[i] = score
+        result[qualification] = score
 
     return result

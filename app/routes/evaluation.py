@@ -5,11 +5,14 @@ import uuid
 import base64
 import hashlib
 from app.configs.daily_config import DAILY_API_KEY, DAILY_WEBHOOK_SECRET
+from app.configs.merge_config import MERGE_API_KEY, MERGE_ACCOUNT_TOKEN
 from ..utils import *
 from app.services import score_calculation
 from app.services import summarize
 from app.services.sentiment import run_emotion_analysis
+from app.services.score_calculation import response_eval
 from app.controllers.supabase_db import SupabaseDB
+from app.controllers.merge import MergeAPIClient
 from app.controllers.dailybatchprocessor import DailyBatchProcessor
 from app.controllers.recording_link import DailyVideoDownloader
 
@@ -60,6 +63,7 @@ def handle_webhook():
         
         batch_processor = DailyBatchProcessor(DAILY_API_KEY)
         downloader = DailyVideoDownloader(DAILY_API_KEY)
+        merge_client = MergeAPIClient(MERGE_ACCOUNT_TOKEN, MERGE_API_KEY)
         database = SupabaseDB()
 
         # Parse JSON data
@@ -120,26 +124,25 @@ def handle_webhook():
                 "interview_summary": {"content": summary},
             }
             database.insert_supabase_data("AI_summary", initial_data)
-            # Calculate interview evaluation
-            # evaluation_id = str(uuid())
-            # text_eval = score_calculation.eval_result(text_raw, questions, min_qual, preferred_qual)
+
             # publicly accessible callback URL
             callback_url = f'https://roborecruiter-analysisbot-production.up.railway.app/hume-callback/hume?analysis_id={analysis_id}' 
 
             # start emotion analysis job with callback
             emotion_job_id = run_emotion_analysis(media_urls, text_raw, models, callback_url)
-            # interview_summary = summarize.dialogue_processing(text_raw, questions)
-
-            # Send evaluation to Supabase
-            # data_to_insert = {"id":evaluation_id,"text_eval":text_eval,"emotion_eval":emotion_eval,"interview_summary":interview_summary}
-            # result = SupabaseDB.insert_supabase_data("AI_summary", data_to_insert)
-
-            #update
-            # update = {"AI_Summary":evaluation_id}
-            # result = SupabaseDB.update_supabase_data("applications", update, supabase_condition)
             
             # return handle_success(result)
             print(emotion_job_id)
+            
+            # insert merge information
+            merge_job = merge_client.process_job_data("6590b339-db89-415a-bc62-b3599af6bc48")
+            merge_job_description = merge_job.data.get("name") + merge_job.data.get("description")
+            
+            data_to_insert = response_eval(text_raw, merge_job_description)
+            text_eval = {
+                'text_eval': data_to_insert
+            }
+            
             return jsonify({'status': f'Emotion analysis job started with ID: {emotion_job_id}'}), 200
         
         return jsonify({'error': 'Unsupported event type'}), 400
