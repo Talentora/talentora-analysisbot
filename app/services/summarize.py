@@ -1,5 +1,5 @@
 import openai
-from app.services.lexical_feature import total_speech
+from app.test.lexical_feature import total_speech
 
 def dialogue_processing(text_raw, questions):
     speech_script = total_speech(text_raw)
@@ -15,12 +15,20 @@ def summarize_text(text, questions): #min_qual is a list whose elements are stri
             "Based on the interview questions, summarize the interview response.")
     
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "system", "content": "You are an assistant assessing interview responses."},
-                    {"role": "user", "content": prompt}]
+        response = openai.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system", 
+                    "content": "You are a veteran recruiter skilled at assessing interview responses."
+                },
+                {
+                    "role": "user", 
+                    "content": prompt
+                }
+            ]
         )
 
-        return response['choices'][0]['message']['content'].strip()
+        return response.choices[0].message.content.strip()
     except Exception as e:
         return f"Error in generating summary: {e}"
