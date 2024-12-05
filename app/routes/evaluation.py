@@ -119,9 +119,19 @@ def handle_webhook():
             analysis_id = str(uuid.uuid4())
             
             summary = batch_processor.process_summary_job(job_id)
+            
+             # insert merge information
+            merge_job = merge_client.process_job_data("6590b339-db89-415a-bc62-b3599af6bc48")
+            merge_job_description = merge_job.data.get("name") + merge_job.data.get("description")
+            
+            data_to_insert = response_eval(text_raw, merge_job_description)
+
             initial_data = {
                 "id": analysis_id,
-                "interview_summary": {"content": summary},
+                "interview_summary": {
+                    "content": summary
+                    },
+                'text_eval': data_to_insert
             }
             database.insert_supabase_data("AI_summary", initial_data)
 
@@ -133,16 +143,6 @@ def handle_webhook():
             
             # return handle_success(result)
             print(emotion_job_id)
-            
-            # insert merge information
-            merge_job = merge_client.process_job_data("6590b339-db89-415a-bc62-b3599af6bc48")
-            merge_job_description = merge_job.data.get("name") + merge_job.data.get("description")
-            
-            data_to_insert = response_eval(text_raw, merge_job_description)
-            text_eval = {
-                'text_eval': data_to_insert
-            }
-            
             return jsonify({'status': f'Emotion analysis job started with ID: {emotion_job_id}'}), 200
         
         return jsonify({'error': 'Unsupported event type'}), 400
