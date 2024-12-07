@@ -106,14 +106,6 @@ def handle_webhook():
             recording_id = data['payload']['input']['recordingId']
             # Process the transcription with the recording ID
             result = downloader.get_download_link(recording_id)
-            # job_id = SupabaseDB.get_supabase_data("applications","job_id",supabase_condition)
-                                    
-            # Get necessary data from Supabase
-            # job_condition = ["job_id",job_id]
-            # questions = SupabaseDB.get_supabase_data("job_interview_config","interview_questions",job_condition)
-            # min_qual = SupabaseDB.get_supabase_data("job_interview_config","min_qual",job_condition)
-            # preferred_qual = SupabaseDB.get_supabase_data("job_interview_config","preferred_qual",job_condition)
-            # media_url = SupabaseDB.get_supabase_data("job_interview_config","preferred_qual",job_condition)
             
             media_urls = [result['download_link']]
             models = {
@@ -125,21 +117,23 @@ def handle_webhook():
             summary = batch_processor.process_summary_job(job_id)
             
              # insert merge information
-            merge_job = merge_client.process_job_data("6590b339-db89-415a-bc62-b3599af6bc48")
+            application_id = database.get_supabase_data("AI_summary", "application_id", ["recording_id", recording_id])
+            merge_job_id = database.get_supabase_data("applications", "job_id", ["id", application_id])
+            
+            merge_job = merge_client.process_job_data(merge_job_id)
             merge_job_description = merge_job.data.get("name") + merge_job.data.get("description")
             
             data_to_insert = response_eval(text_raw, merge_job_description)
 
             initial_data = {
-                "interview_summary": {
-                    "content": summary
-                    },
-                'text_eval': data_to_insert
+                "transcript_summary": summary,
+                'text_eval': data_to_insert,
+                'batch-processor_transcript_id': job_id
             }
             database.update_supabase_data("AI_summary", initial_data, ['recording_id', recording_id])
 
             # publicly accessible callback URL
-            callback_url = f'https://roborecruiter-analysisbot-production.up.railway.app/hume-callback/hume?recording_id={recording_id}' 
+            callback_url = f'https://roborecruiter-analysisbot-production.up.railway.app/hume-callback/hume?recording_id={recording_id}&job_description={merge_job_description}' 
 
             # start emotion analysis job with callback
             emotion_job_id = run_emotion_analysis(media_urls, text_raw, models, callback_url)
