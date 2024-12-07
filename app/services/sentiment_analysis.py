@@ -28,6 +28,22 @@ class EmotionAnalyzer:
 
         normalized_score = 10 * (total - min_possible) / (max_possible - min_possible)
         return round(max(0, min(10, normalized_score)), 2)
+    
+    def get_top_emotions(self, emotions: Dict[str, float], n: int = 3) -> List[Dict[str, Union[str, float]]]:
+        """
+        Get the top n emotions with highest scores.
+        Returns list of dicts with emotion name and score.
+        """
+        sorted_emotions = sorted(
+            emotions.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )[:n]
+        
+        return [
+            {"emotion": emotion, "score": round(score, 3)}
+            for emotion, score in sorted_emotions
+        ]
 
     def process_predictions(self, predictions) -> Dict[str, Dict[str, Union[float, Dict[str, float], List[Dict]]]]:
         """
@@ -120,6 +136,25 @@ class EmotionAnalyzer:
                 for emotion, score in language_accumulated.items()
             } if counts['language'] > 0 else {}
         }
+        
+        overall_emotions = {}
+        valid_modalities = 0
+
+        for modality in ['face', 'prosody', 'language']:
+            if counts[modality] > 0:
+                valid_modalities += 1
+                for emotion, score in averages[modality].items():
+                    overall_emotions[emotion] = overall_emotions.get(emotion, 0) + score
+
+        # Average the emotions across modalities
+        if valid_modalities > 0:
+            overall_emotions = {
+                emotion: score / valid_modalities 
+                for emotion, score in overall_emotions.items()
+            }
+
+        # Get top emotions
+        top_emotions = self.get_top_emotions(overall_emotions) if overall_emotions else []
 
         return {
             'timeline': {
@@ -140,6 +175,11 @@ class EmotionAnalyzer:
                     'emotions': averages['language'],
                     'aggregate_score': self.aggregate_emotion_score(averages['language']) if averages['language'] else 0
                 }
+            },
+            'overall': {
+                'emotions': overall_emotions,
+                'top_emotions': top_emotions,
+                'aggregate_score': self.aggregate_emotion_score(overall_emotions) if overall_emotions else 0
             },
             'metadata': {
                 'counts': counts
