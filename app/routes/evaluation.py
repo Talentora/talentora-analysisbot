@@ -115,11 +115,10 @@ def handle_webhook():
             }
                         
             summary = batch_processor.process_summary_job(job_id)
-            print(recording_id)
              # insert merge information
-            application_id = database.get_supabase_data("AI_summary", "application_id", ["recording_id", recording_id])
+            application_id = database.get_supabase_data("AI_summary", "application_id", ["recording_id", recording_id])['data'][0]['application_id']
             print(application_id)
-            merge_job_id = database.get_supabase_data("applications", "job_id", ["id", application_id])
+            merge_job_id = database.get_supabase_data("applications", "job_id", ["id", application_id])['data'][0]['job_id']
             print(merge_job_id)
             
             merge_job = merge_client.process_job_data(merge_job_id)
