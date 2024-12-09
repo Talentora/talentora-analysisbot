@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin, CORS
 from hume import HumeClient
@@ -39,7 +40,7 @@ def hume_callback():
         transcript_summary = database.get_supabase_data("AI_summary", "transcript_summary", ["recording_id", recording_id]).data[0]['transcript_summary']
         text_eval = database.get_supabase_data("AI_summary", "text_eval", ["recording_id", recording_id]).data[0]['text_eval']
         job_description = request.args.get('job_description')
-        summary = ai_summary(transcript_summary, text_eval, job_description, emotion_results)
+        summary = json.loads(ai_summary(transcript_summary, text_eval, job_description, emotion_results))
         
         update_data = {
             "emotion_eval": emotion_results,
