@@ -118,6 +118,8 @@ def handle_webhook():
              # insert merge information
             application_id = database.get_supabase_data("AI_summary", "application_id", ["recording_id", recording_id]).data[0]['application_id']
             print(application_id)
+            merge_job = database.get_supabase_data("applications", "job_id", ["id", application_id])
+            print(merge_job)
             merge_job_id = database.get_supabase_data("applications", "job_id", ["id", application_id]).data[0]['job_id']
             print(merge_job_id)
             
