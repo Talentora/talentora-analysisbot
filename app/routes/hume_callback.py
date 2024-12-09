@@ -36,8 +36,8 @@ def hume_callback():
 
         # Process predictions
         emotion_results = emotion_analyzer.process_predictions(predictions)
-        transcript_summary = database.get_supabase_data("AI_summary", "transcript_summary", ["recording_id", recording_id])
-        text_eval = database.get_supabase_data("AI_summary", "text_eval", ["recording_id", recording_id])
+        transcript_summary = database.get_supabase_data("AI_summary", "transcript_summary", ["recording_id", recording_id]).data[0]['transcript_summary']
+        text_eval = database.get_supabase_data("AI_summary", "text_eval", ["recording_id", recording_id]).data[0]['text_eval']
         job_description = request.args.get('job_description')
         summary = ai_summary(transcript_summary, text_eval, job_description, emotion_results)
         
