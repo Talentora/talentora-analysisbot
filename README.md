@@ -2,6 +2,22 @@
 This repo contains the ML models that score a candidate and determine if they're a good fit for a role. 
 
 (e.g softskills analysis, cultural fit analysis, technical skills analysis, etc.)
+
+
+## Run instructions
+1. Run docker
+2. Run this command:
+```
+docker build -t talentora-analysisbot .
+docker run -d -p 8000:8000 --name talentora talentora-analysisbot
+```
+3. Now run localhost:8000 to verify
+4. To stop, simply run 
+```
+docker stop talentora
+```
+5. meow
+
 ## Input
 
 1) Video: Interview Recording
