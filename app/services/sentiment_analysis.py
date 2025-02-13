@@ -45,7 +45,7 @@ class EmotionAnalyzer:
             for emotion, score in sorted_emotions
         ]
 
-    def process_predictions(self, predictions) -> Dict[str, Dict[str, Union[float, Dict[str, float], List[Dict]]]]:
+    def process_predictions(self, prediction) -> Dict[str, Dict[str, Union[float, Dict[str, float], List[Dict]]]]:
         """
         Process predictions and return accumulated emotion scores.
         """
@@ -58,45 +58,45 @@ class EmotionAnalyzer:
         language_accumulated = {}
         counts = {'face': 0, 'prosody': 0, 'language': 0}
 
-        for prediction in predictions:
-            for result in prediction.results.predictions:
-                # Process Face Model Predictions
-                if result.models.face:
-                    for group in result.models.face.grouped_predictions:
-                        for pred in group.predictions:
-                            emotions = {emotion.name: emotion.score for emotion in pred.emotions}
-                            face_timeline.append({
-                                'time': pred.time,  # Time in seconds
-                                'frame': pred.frame,
-                                'emotions': emotions,
-                                'aggregate_score': self.aggregate_emotion_score(emotions),
-                                'id': group.id  # Track individual faces
-                            })
-                            
-                            for emotion, score in emotions.items():
-                                face_accumulated[emotion] = face_accumulated.get(emotion, 0.0) + score
-                            counts['face'] += 1
+        # for prediction in predictions:
+        for result in prediction.results.predictions:
+            # Process Face Model Predictions
+            if result.models.face:
+                for group in result.models.face.grouped_predictions:
+                    for pred in group.predictions:
+                        emotions = {emotion.name: emotion.score for emotion in pred.emotions}
+                        face_timeline.append({
+                            'time': pred.time,  # Time in seconds
+                            'frame': pred.frame,
+                            'emotions': emotions,
+                            'aggregate_score': self.aggregate_emotion_score(emotions),
+                            'id': group.id  # Track individual faces
+                        })
+                        
+                        for emotion, score in emotions.items():
+                            face_accumulated[emotion] = face_accumulated.get(emotion, 0.0) + score
+                        counts['face'] += 1
 
-                # Process Prosody Model Predictions
-                if result.models.prosody:
-                    for group in result.models.prosody.grouped_predictions:
-                        for pred in group.predictions:
-                            emotions = {emotion.name: emotion.score for emotion in pred.emotions}
-                            prosody_timeline.append({
-                                'time_start': pred.time.begin,
-                                'time_end': pred.time.end,
-                                'emotions': emotions,
-                                'aggregate_score': self.aggregate_emotion_score(emotions),
-                                'id': group.id,
-                                'text': getattr(pred, 'text', None)
-                            })
-                            
-                            for emotion, score in emotions.items():
-                                prosody_accumulated[emotion] = prosody_accumulated.get(emotion, 0.0) + score
-                            counts['prosody'] += 1
+            # Process Prosody Model Predictions
+            if result.models.prosody:
+                for group in result.models.prosody.grouped_predictions:
+                    for pred in group.predictions:
+                        emotions = {emotion.name: emotion.score for emotion in pred.emotions}
+                        prosody_timeline.append({
+                            'time_start': pred.time.begin,
+                            'time_end': pred.time.end,
+                            'emotions': emotions,
+                            'aggregate_score': self.aggregate_emotion_score(emotions),
+                            'id': group.id,
+                            'text': getattr(pred, 'text', None)
+                        })
+                        
+                        for emotion, score in emotions.items():
+                            prosody_accumulated[emotion] = prosody_accumulated.get(emotion, 0.0) + score
+                        counts['prosody'] += 1
 
-                # Process Language Model Predictions
-                if result.models.language:
+            # Process Language Model Predictions
+            if result.models.language:
                     for group in result.models.language.grouped_predictions:
                         for pred in group.predictions:
                             emotions = {emotion.name: emotion.score for emotion in pred.emotions}

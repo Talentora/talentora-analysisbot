@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 HUME_API_KEY = os.environ.get("HUME_API_KEY")
+HUME_API_SECRET = os.environ.get("HUME_API_SECRET")
 DEFAULT_JOB_MONITOR_INTERVAL = 10
 
 # Emotion weights configuration
