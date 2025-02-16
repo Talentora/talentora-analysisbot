@@ -18,3 +18,5 @@ def create_app(Test=False) -> Flask:
    
 
     return app
+
+# This file can be empty, it just marks the directory as a Python package
