@@ -13,6 +13,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import LinearSVR
 from sklearn.linear_model import Lasso
 from sklearn.metrics import mean_squared_error, r2_score
+from typing import Dict, List, Union
+from hume import HumeClient  # Make sure HumeClient is installed/configured
 
 # Initialize colorama
 init()
@@ -22,7 +24,7 @@ load_dotenv()
 
 # Supabase credentials
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY") 
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY_TEMP")
 
 # ---------------------------
 # Supabase Data Access Class
@@ -41,8 +43,10 @@ class SupabaseDB:
                 path=folder_path,
                 options=options
             )
-            file_list = [f"{folder_path}/{file['name']}" if folder_path else file['name']
-                        for file in response if file['id']]
+            file_list = [
+                f"{folder_path}/{file['name']}" if folder_path else file['name']
+                for file in response if file['id']
+            ]
             return file_list
         except Exception as e:
             print(f"{Fore.RED}✗ Error listing files: {str(e)}{Style.RESET_ALL}")
@@ -61,7 +65,8 @@ class SupabaseDB:
             return None
 
 # ---------------------------
-# Emotion Analyzer (from Hume)
+# (Optional) Emotion Analyzer Class
+# (If you're re-processing raw predictions; might not be needed if you already have final JSON)
 # ---------------------------
 EMOTION_WEIGHTS = {
     "happy": 1.0,
@@ -69,9 +74,6 @@ EMOTION_WEIGHTS = {
     "neutral": 0.0,
     # Adjust or extend as needed.
 }
-
-from typing import Dict, List, Union
-from hume import HumeClient  # Make sure HumeClient is installed/configured
 
 class EmotionAnalyzer:
     def __init__(self, api_key: str):
@@ -97,149 +99,98 @@ class EmotionAnalyzer:
         sorted_emotions = sorted(emotions.items(), key=lambda x: x[1], reverse=True)[:n]
         return [{"emotion": emotion, "score": round(score, 3)} for emotion, score in sorted_emotions]
 
-    def process_predictions(self, predictions) -> Dict[str, Dict[str, Union[float, Dict[str, float], List[Dict]]]]:
-        # (The implementation remains as in your original code.)
-        face_timeline, prosody_timeline, language_timeline = [], [], []
-        face_accumulated, prosody_accumulated, language_accumulated = {}, {}, {}
-        counts = {'face': 0, 'prosody': 0, 'language': 0}
-
-        for prediction in predictions:
-            for result in prediction.results.predictions:
-                if result.models.face:
-                    for group in result.models.face.grouped_predictions:
-                        for pred in group.predictions:
-                            emotions = {e.name: e.score for e in pred.emotions}
-                            face_timeline.append({
-                                'time': pred.time,
-                                'frame': pred.frame,
-                                'emotions': emotions,
-                                'aggregate_score': self.aggregate_emotion_score(emotions),
-                                'id': group.id
-                            })
-                            for emotion, score in emotions.items():
-                                face_accumulated[emotion] = face_accumulated.get(emotion, 0.0) + score
-                            counts['face'] += 1
-                if result.models.prosody:
-                    for group in result.models.prosody.grouped_predictions:
-                        for pred in group.predictions:
-                            emotions = {e.name: e.score for e in pred.emotions}
-                            prosody_timeline.append({
-                                'time_start': pred.time.begin,
-                                'time_end': pred.time.end,
-                                'emotions': emotions,
-                                'aggregate_score': self.aggregate_emotion_score(emotions),
-                                'id': group.id,
-                                'text': getattr(pred, 'text', None)
-                            })
-                            for emotion, score in emotions.items():
-                                prosody_accumulated[emotion] = prosody_accumulated.get(emotion, 0.0) + score
-                            counts['prosody'] += 1
-                if result.models.language:
-                    for group in result.models.language.grouped_predictions:
-                        for pred in group.predictions:
-                            emotions = {e.name: e.score for e in pred.emotions}
-                            entry = {
-                                'emotions': emotions,
-                                'aggregate_score': self.aggregate_emotion_score(emotions),
-                                'text': pred.text,
-                                'position': {'begin': pred.position.begin, 'end': pred.position.end}
-                            }
-                            if hasattr(pred, 'time') and pred.time:
-                                entry['time_start'] = pred.time.begin
-                                entry['time_end'] = pred.time.end
-                            language_timeline.append(entry)
-                            for emotion, score in emotions.items():
-                                language_accumulated[emotion] = language_accumulated.get(emotion, 0.0) + score
-                            counts['language'] += 1
-
-        averages = {
-            'face': {emotion: score / counts['face'] for emotion, score in face_accumulated.items()} if counts['face'] > 0 else {},
-            'prosody': {emotion: score / counts['prosody'] for emotion, score in prosody_accumulated.items()} if counts['prosody'] > 0 else {},
-            'language': {emotion: score / counts['language'] for emotion, score in language_accumulated.items()} if counts['language'] > 0 else {}
-        }
-        
-        overall_emotions = {}
-        valid_modalities = 0
-        for modality in ['face', 'prosody', 'language']:
-            if counts[modality] > 0:
-                valid_modalities += 1
-                for emotion, score in averages[modality].items():
-                    overall_emotions[emotion] = overall_emotions.get(emotion, 0) + score
-        if valid_modalities > 0:
-            overall_emotions = {emotion: score / valid_modalities for emotion, score in overall_emotions.items()}
-        top_emotions = self.get_top_emotions(overall_emotions) if overall_emotions else []
-        return {
-            'timeline': {
-                'face': sorted(face_timeline, key=lambda x: x['time']),
-                'prosody': sorted(prosody_timeline, key=lambda x: x['time_start']),
-                'language': sorted(language_timeline, key=lambda x: x.get('time_start', x['position']['begin']))
-            },
-            'averages': {
-                'face': {'emotions': averages['face'], 'aggregate_score': self.aggregate_emotion_score(averages['face']) if averages['face'] else 0},
-                'prosody': {'emotions': averages['prosody'], 'aggregate_score': self.aggregate_emotion_score(averages['prosody']) if averages['prosody'] else 0},
-                'language': {'emotions': averages['language'], 'aggregate_score': self.aggregate_emotion_score(averages['language']) if averages['language'] else 0}
-            },
-            'overall': {
-                'emotions': overall_emotions,
-                'top_emotions': top_emotions,
-                'aggregate_score': self.aggregate_emotion_score(overall_emotions) if overall_emotions else 0
-            },
-            'metadata': {'counts': counts}
-        }
+    # If you have raw predictions, you would define process_predictions here
+    # But if your JSON is already "final", you can skip re-processing.
 
 # ---------------------------
-# Data Loading Helpers
+# 1. Helper to Extract Aggregates from "Final" JSON
+# ---------------------------
+def extract_aggregates(json_data: dict) -> dict:
+    """
+    Given the final output JSON from the emotion analyzer,
+    extract the aggregate scores and a participant_id from 'file_analyzed'.
+    """
+    results = json_data.get("results", {})
+    overall = results.get("overall", {})
+    timeline = results.get("timeline", {})
+
+    # 1a) Parse out participant ID from file_analyzed
+    #     e.g. "PP1.mp4" -> "pp1"
+    file_analyzed = json_data.get("file_analyzed", "")
+    participant_id = file_analyzed.lower().replace(".mp4", "")  # e.g. "pp1"
+
+    # 1b) Compute the face aggregate
+    face_entries = timeline.get("face", [])
+    if isinstance(face_entries, list) and face_entries:
+        face_aggregate = sum(item.get("aggregate_score", 0) for item in face_entries) / len(face_entries)
+    else:
+        face_aggregate = 0.0
+
+    # 1c) Compute the prosody aggregate
+    prosody_entries = timeline.get("prosody", [])
+    if isinstance(prosody_entries, list) and prosody_entries:
+        prosody_aggregate = sum(item.get("aggregate_score", 0) for item in prosody_entries) / len(prosody_entries)
+    else:
+        prosody_aggregate = 0.0
+
+    # 1d) Compute the language aggregate
+    language_data = timeline.get("language", {})
+    if isinstance(language_data, list) and language_data:
+        language_aggregate = sum(item.get("aggregate_score", 0) for item in language_data) / len(language_data)
+    elif isinstance(language_data, dict):
+        language_aggregate = language_data.get("aggregate_score", 0.0)
+    else:
+        language_aggregate = 0.0
+
+    # 1e) Overall aggregate
+    overall_aggregate = overall.get("aggregate_score", 0.0)
+
+    return {
+        "participant_id": participant_id,  # Key for merging with CSV
+        "face_aggregate": face_aggregate,
+        "prosody_aggregate": prosody_aggregate,
+        "language_aggregate": language_aggregate,
+        "overall_aggregate": overall_aggregate
+    }
+
+# ---------------------------
+# 2. Load the JSON Files from Supabase
 # ---------------------------
 def load_hume_features():
-    """
-    Fetch Hume JSON outputs from Supabase, process them, and return a DataFrame of features.
-    """
     supabase = SupabaseDB()
-    # List files in the "Hume Output" bucket
     files = supabase.list_storage_files(bucket_id="Hume Output")
     if not files:
         print("No files found in Hume Output bucket.")
         return pd.DataFrame()
-    
-    # Create signed URLs for the files
+
+    # Filter out any placeholder files
+    files = [f for f in files if ".emptyFolderPlaceholder" not in f]
+
     urls = supabase.create_signed_url(bucket_id="Hume Output", files=files, expires_in=3600)
     print(f"Generated {len(urls)} URLs for Hume output files.")
 
-    json_objects = []
+    features_list = []
     for url in tqdm(urls, desc="Downloading Hume outputs"):
         try:
             response = requests.get(url)
             response.raise_for_status()
-            # Assume the JSON structure has a top-level "results" key
-            json_data = response.json().get("results")
-            if json_data:
-                json_objects.append(json_data)
+            json_data = response.json()
+            if not isinstance(json_data, dict):
+                print(f"Skipping URL {url} because JSON is not a dict.")
+                continue
+            aggregates = extract_aggregates(json_data)
+            features_list.append(aggregates)
         except Exception as e:
-            print(f"Error downloading/parsing JSON from {url}: {e}")
-    
-    # Process each JSON object using the EmotionAnalyzer
-    # (Assuming each JSON object corresponds to one candidate/interview)
-    emotion_analyzer = EmotionAnalyzer(api_key=os.environ.get("HUME_API_KEY"))
-    features_list = []
-    for idx, predictions in enumerate(json_objects):
-        try:
-            processed = emotion_analyzer.process_predictions(predictions)
-            features = {
-                "candidate_id": idx,  # or use an identifier from your data if available
-                "face_aggregate": processed["averages"]["face"]["aggregate_score"],
-                "prosody_aggregate": processed["averages"]["prosody"]["aggregate_score"],
-                "language_aggregate": processed["averages"]["language"]["aggregate_score"],
-                "overall_aggregate": processed["overall"]["aggregate_score"]
-            }
-            features_list.append(features)
-        except Exception as e:
-            print(f"Error processing predictions for candidate {idx}: {e}")
-    
+            print(f"Error processing URL {url}: {e}")
+
     df_features = pd.DataFrame(features_list)
-    print("Hume feature DataFrame:")
+    print("\nHume feature DataFrame:")
     print(df_features.head())
     return df_features
 
+# ---------------------------
+# 3. Load and Filter CSV from Supabase
+# ---------------------------
 def load_labels():
     """
     Fetch the labeled CSV file from Supabase and return it as a DataFrame.
@@ -249,103 +200,121 @@ def load_labels():
     if not files:
         print("No label files found.")
         return pd.DataFrame()
-    labeled_file = files[0]  # Choose the appropriate file
+
+    labeled_file = files[1]  # Choose the appropriate file
     labeled_urls = supabase.create_signed_url(bucket_id="Interviews", files=[labeled_file], expires_in=3600)
+
     try:
         response = requests.get(labeled_urls[0], stream=True)
         response.raise_for_status()
-        temp_file_path = os.path.join("/tmp", "labeled_scores.csv")
+        temp_file_path = os.path.join("/tmp", "turker_scores_full_interview.csv")
         with open(temp_file_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
+
         df_labels = pd.read_csv(temp_file_path)
-        print("Labeled CSV DataFrame:")
+        print("\nFull Labeled CSV DataFrame (Before Filtering):")
         print(df_labels.head())
+
+        # Filter rows to keep only those with "pp" in the "Participant" column (case-insensitive)
+        df_labels = df_labels[df_labels['Participant'].str.contains('pp', case=False, na=False)].copy()
+        
+        # Only keep rows where Worker equals "AGGR"
+        df_labels = df_labels[df_labels['Worker'].str.upper() == "AGGR"].copy()
+
+        # Create a new column "participant_id" to match the JSON
+        # E.g. "PP1" -> "pp1"
+        df_labels['participant_id'] = df_labels['Participant'].str.lower()
+
+        print("\nFiltered Labeled CSV DataFrame (Only 'pp'):")
+        print(df_labels.head(n=30))
+
         return df_labels
     except Exception as e:
         print(f"Error loading labeled scores: {e}")
         return pd.DataFrame()
 
 # ---------------------------
-# SVR Training Pipeline
+# 4. SVR/Lasso Training Pipeline
 # ---------------------------
 def train_regression_model(df):
     """
     Given a merged DataFrame with features and labels, train and evaluate regression models.
+    We'll use 'RecommendHiring' from the CSV as the ground truth (target).
     """
-    # Assume df has columns: candidate_id, face_aggregate, prosody_aggregate, language_aggregate, overall_aggregate, hiring_score
+    # Ensure "RecommendHiring" exists in the merged DataFrame
+    if "RecommendHiring" not in df.columns:
+        print("No 'RecommendHiring' column in merged data. Exiting.")
+        return
+
+    # We'll use the four aggregates as features
     feature_columns = ['face_aggregate', 'prosody_aggregate', 'language_aggregate', 'overall_aggregate']
     X = df[feature_columns]
-    y = df['hiring_score']
-    
+    y = df['RecommendHiring']  # <--- Using "RecommendHiring" as the target
+
     # Scale features
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
-    
+
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
-    
+
     # --- Linear SVR ---
     linear_svr = LinearSVR(max_iter=10000)
     param_grid_linear = {'C': [0.1, 1, 10]}
     svr_cv = GridSearchCV(linear_svr, param_grid_linear, cv=5, scoring='neg_mean_squared_error')
     svr_cv.fit(X_train, y_train)
     best_linear_svr = svr_cv.best_estimator_
-    
+
     svr_predictions = best_linear_svr.predict(X_test)
-    print("\nLinear SVR Performance:")
+    print("\nLinear SVR Performance (predicting 'RecommendHiring'):")
     print("R^2 Score:", r2_score(y_test, svr_predictions))
     print("MSE:", mean_squared_error(y_test, svr_predictions))
-    
+
     emotion_weights_svr = {feature: coef for feature, coef in zip(feature_columns, best_linear_svr.coef_)}
-    print("\nLinear SVR Emotion Weights:")
+    print("\nLinear SVR Feature Weights:")
     for feature, weight in emotion_weights_svr.items():
         print(f"{feature}: {weight}")
-    
+
     # --- Lasso Regression ---
     lasso = Lasso(max_iter=10000)
     param_grid_lasso = {'alpha': [0.001, 0.01, 0.1, 1, 10]}
     lasso_cv = GridSearchCV(lasso, param_grid_lasso, cv=5, scoring='neg_mean_squared_error')
     lasso_cv.fit(X_train, y_train)
     best_lasso = lasso_cv.best_estimator_
-    
+
     lasso_predictions = best_lasso.predict(X_test)
-    print("\nLasso Regression Performance:")
+    print("\nLasso Regression Performance (predicting 'RecommendHiring'):")
     print("R^2 Score:", r2_score(y_test, lasso_predictions))
     print("MSE:", mean_squared_error(y_test, lasso_predictions))
-    
+
     lasso_feature_importance = {feature: coef for feature, coef in zip(feature_columns, best_lasso.coef_)}
     print("\nLasso Feature Importance:")
     for feature, coef in lasso_feature_importance.items():
         print(f"{feature}: {coef}")
 
 # ---------------------------
-# Main Pipeline
+# 5. Main Pipeline
 # ---------------------------
 def main():
-    # Load features from Hume outputs
+    # Load features from final Hume outputs
     df_features = load_hume_features()
     if df_features.empty:
         print("No features loaded. Exiting.")
         return
 
-    # Load labeled scores
+    # Load labeled scores from CSV (filtering only rows that contain "pp")
     df_labels = load_labels()
     if df_labels.empty:
         print("No labels loaded. Exiting.")
         return
 
-    # Merge on candidate_id or another common key (adjust as needed)
-    # Here, we assume that the order matches or you have a common key.
-    # For demonstration, we add a column 'candidate_id' to df_labels if missing.
-    if 'candidate_id' not in df_labels.columns:
-        df_labels['candidate_id'] = range(len(df_labels))
-    
-    df_merged = pd.merge(df_features, df_labels, on="candidate_id", how="inner")
+    # Merge the two DataFrames on "participant_id"
+    df_merged = pd.merge(df_features, df_labels, on="participant_id", how="inner")
     print("\nMerged Dataset:")
-    print(df_merged.head())
-    
-    # Now train the regression models using the merged dataset.
+    print(df_merged.head(n=30))
+
+    # Train the regression models using the merged dataset
     train_regression_model(df_merged)
 
 if __name__ == "__main__":
