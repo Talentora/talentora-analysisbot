@@ -16,6 +16,10 @@ from sklearn.metrics import mean_squared_error, r2_score
 from typing import Dict, List, Union
 from hume import HumeClient  # Make sure HumeClient is installed/configured
 
+# For visualizations
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 # Initialize colorama
 init()
 
@@ -66,7 +70,6 @@ class SupabaseDB:
 
 # ---------------------------
 # (Optional) Emotion Analyzer Class
-# (If you're re-processing raw predictions; might not be needed if you already have final JSON)
 # ---------------------------
 EMOTION_WEIGHTS = {
     "happy": 1.0,
@@ -99,9 +102,6 @@ class EmotionAnalyzer:
         sorted_emotions = sorted(emotions.items(), key=lambda x: x[1], reverse=True)[:n]
         return [{"emotion": emotion, "score": round(score, 3)} for emotion, score in sorted_emotions]
 
-    # If you have raw predictions, you would define process_predictions here
-    # But if your JSON is already "final", you can skip re-processing.
-
 # ---------------------------
 # 1. Helper to Extract Aggregates from "Final" JSON
 # ---------------------------
@@ -114,26 +114,25 @@ def extract_aggregates(json_data: dict) -> dict:
     overall = results.get("overall", {})
     timeline = results.get("timeline", {})
 
-    # 1a) Parse out participant ID from file_analyzed
-    #     e.g. "PP1.mp4" -> "pp1"
+    # Parse out participant ID from file_analyzed, e.g. "PP1.mp4" -> "pp1"
     file_analyzed = json_data.get("file_analyzed", "")
-    participant_id = file_analyzed.lower().replace(".mp4", "")  # e.g. "pp1"
+    participant_id = file_analyzed.lower().replace(".mp4", "")
 
-    # 1b) Compute the face aggregate
+    # Compute the face aggregate
     face_entries = timeline.get("face", [])
     if isinstance(face_entries, list) and face_entries:
         face_aggregate = sum(item.get("aggregate_score", 0) for item in face_entries) / len(face_entries)
     else:
         face_aggregate = 0.0
 
-    # 1c) Compute the prosody aggregate
+    # Compute the prosody aggregate
     prosody_entries = timeline.get("prosody", [])
     if isinstance(prosody_entries, list) and prosody_entries:
         prosody_aggregate = sum(item.get("aggregate_score", 0) for item in prosody_entries) / len(prosody_entries)
     else:
         prosody_aggregate = 0.0
 
-    # 1d) Compute the language aggregate
+    # Compute the language aggregate
     language_data = timeline.get("language", {})
     if isinstance(language_data, list) and language_data:
         language_aggregate = sum(item.get("aggregate_score", 0) for item in language_data) / len(language_data)
@@ -142,11 +141,11 @@ def extract_aggregates(json_data: dict) -> dict:
     else:
         language_aggregate = 0.0
 
-    # 1e) Overall aggregate
+    # Overall aggregate
     overall_aggregate = overall.get("aggregate_score", 0.0)
 
     return {
-        "participant_id": participant_id,  # Key for merging with CSV
+        "participant_id": participant_id,
         "face_aggregate": face_aggregate,
         "prosody_aggregate": prosody_aggregate,
         "language_aggregate": language_aggregate,
@@ -222,8 +221,7 @@ def load_labels():
         # Only keep rows where Worker equals "AGGR"
         df_labels = df_labels[df_labels['Worker'].str.upper() == "AGGR"].copy()
 
-        # Create a new column "participant_id" to match the JSON
-        # E.g. "PP1" -> "pp1"
+        # Create a new column "participant_id" to match the JSON (e.g., "PP1" -> "pp1")
         df_labels['participant_id'] = df_labels['Participant'].str.lower()
 
         print("\nFiltered Labeled CSV DataFrame (Only 'pp'):")
@@ -235,32 +233,57 @@ def load_labels():
         return pd.DataFrame()
 
 # ---------------------------
-# 4. SVR/Lasso Training Pipeline
+# Data Visualization Function
+# ---------------------------
+def visualize_data(df):
+    feature_columns = ['face_aggregate', 'prosody_aggregate', 'language_aggregate', 'overall_aggregate']
+    
+    # Pairplot of features and target
+    sns.pairplot(df[feature_columns + ['RecommendHiring']])
+    plt.suptitle("Pairplot of Features and Target", y=1.02)
+    plt.show()
+    
+    # Correlation heatmap
+    plt.figure(figsize=(10, 8))
+    corr = df[feature_columns + ['RecommendHiring']].corr()
+    sns.heatmap(corr, annot=True, cmap="coolwarm", fmt=".2f")
+    plt.title("Feature Correlation Matrix")
+    plt.show()
+    
+    # Distribution of the target variable
+    plt.figure(figsize=(8, 6))
+    sns.histplot(df['RecommendHiring'], kde=True, color='purple')
+    plt.title("Distribution of RecommendHiring")
+    plt.xlabel("RecommendHiring")
+    plt.ylabel("Frequency")
+    plt.show()
+
+# ---------------------------
+# 4. SVR/Lasso Training Pipeline with Visualizations
 # ---------------------------
 def train_regression_model(df):
     """
     Given a merged DataFrame with features and labels, train and evaluate regression models.
     We'll use 'RecommendHiring' from the CSV as the ground truth (target).
     """
-    # Ensure "RecommendHiring" exists in the merged DataFrame
     if "RecommendHiring" not in df.columns:
         print("No 'RecommendHiring' column in merged data. Exiting.")
         return
 
-    # We'll use the four aggregates as features
+    # Define features and target
     feature_columns = ['face_aggregate', 'prosody_aggregate', 'language_aggregate', 'overall_aggregate']
     X = df[feature_columns]
-    y = df['RecommendHiring']  # <--- Using "RecommendHiring" as the target
+    y = df['RecommendHiring']
 
     # Scale features
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    # Split data
+    # Split data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
 
     # --- Linear SVR ---
-    linear_svr = LinearSVR(max_iter=10000)
+    linear_svr = LinearSVR(max_iter=100000)
     param_grid_linear = {'C': [0.1, 1, 10]}
     svr_cv = GridSearchCV(linear_svr, param_grid_linear, cv=5, scoring='neg_mean_squared_error')
     svr_cv.fit(X_train, y_train)
@@ -275,6 +298,24 @@ def train_regression_model(df):
     print("\nLinear SVR Feature Weights:")
     for feature, weight in emotion_weights_svr.items():
         print(f"{feature}: {weight}")
+
+    # Plot Actual vs. Predicted for Linear SVR
+    plt.figure(figsize=(8, 6))
+    plt.scatter(y_test, svr_predictions, alpha=0.7, color='blue')
+    plt.xlabel("Actual RecommendHiring")
+    plt.ylabel("Predicted RecommendHiring")
+    plt.title("Linear SVR: Actual vs Predicted")
+    plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red', linestyle='--')
+    plt.show()
+
+    # Plot residual distribution for Linear SVR
+    residuals_svr = y_test - svr_predictions
+    plt.figure(figsize=(8, 6))
+    plt.hist(residuals_svr, bins=20, color='blue', alpha=0.7)
+    plt.xlabel("Residuals")
+    plt.ylabel("Frequency")
+    plt.title("Linear SVR: Residual Distribution")
+    plt.show()
 
     # --- Lasso Regression ---
     lasso = Lasso(max_iter=10000)
@@ -293,11 +334,29 @@ def train_regression_model(df):
     for feature, coef in lasso_feature_importance.items():
         print(f"{feature}: {coef}")
 
+    # Plot Actual vs. Predicted for Lasso Regression
+    plt.figure(figsize=(8, 6))
+    plt.scatter(y_test, lasso_predictions, alpha=0.7, color='green')
+    plt.xlabel("Actual RecommendHiring")
+    plt.ylabel("Predicted RecommendHiring")
+    plt.title("Lasso Regression: Actual vs Predicted")
+    plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red', linestyle='--')
+    plt.show()
+
+    # Plot residual distribution for Lasso Regression
+    residuals_lasso = y_test - lasso_predictions
+    plt.figure(figsize=(8, 6))
+    plt.hist(residuals_lasso, bins=20, color='green', alpha=0.7)
+    plt.xlabel("Residuals")
+    plt.ylabel("Frequency")
+    plt.title("Lasso Regression: Residual Distribution")
+    plt.show()
+
 # ---------------------------
 # 5. Main Pipeline
 # ---------------------------
 def main():
-    # Load features from final Hume outputs
+    # Load features from Hume outputs
     df_features = load_hume_features()
     if df_features.empty:
         print("No features loaded. Exiting.")
@@ -313,7 +372,10 @@ def main():
     df_merged = pd.merge(df_features, df_labels, on="participant_id", how="inner")
     print("\nMerged Dataset:")
     print(df_merged.head(n=30))
-
+    
+    # Visualize the merged data (features and target)
+    visualize_data(df_merged)
+    
     # Train the regression models using the merged dataset
     train_regression_model(df_merged)
 
