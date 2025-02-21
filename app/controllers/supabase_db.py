@@ -16,6 +16,7 @@ class SupabaseDB:
         self.client = create_client(SUPABASE_URL, SUPABASE_KEY)
         print(f"{Fore.GREEN}✓ Supabase client initialized successfully{Style.RESET_ALL}")
 
+
     def get_supabase_data(self, table: str, select_target: str, condition: list = None):
         """
         Fetch data from the given table with optional conditions.
@@ -27,6 +28,7 @@ class SupabaseDB:
         response = query.execute()
         print(f"{Fore.GREEN}✓ Data fetched successfully{Style.RESET_ALL}")
         return response
+
 
     def insert_supabase_data(self, table: str, data_for_insert: dict) -> dict:
         """
@@ -56,6 +58,7 @@ class SupabaseDB:
         except Exception as e:
             print(f"{Fore.RED}✗ Error inserting data: {str(e)}{Style.RESET_ALL}")
             return {"success": False, "error": str(e)}
+
 
     def update_supabase_data(self, table: str, data_for_update: dict, condition: list):
         """
