@@ -38,4 +38,5 @@ torch
 supabase
 nltk
 openai
+websockets==9.1
 colorama
