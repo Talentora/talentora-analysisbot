@@ -16,6 +16,7 @@ from app.controllers.dailybatchprocessor import DailyBatchProcessor
 from app.controllers.recording_link import DailyVideoDownloader
 from app.utils import handle_server_error
 
+
 class WebhookHandler:
     def __init__(self):
         self.batch_processor = DailyBatchProcessor(DAILY_API_KEY)
