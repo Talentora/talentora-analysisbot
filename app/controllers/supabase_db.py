@@ -6,6 +6,7 @@ class SupabaseDB:
     def __init__(self):
         self.client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+
     def get_supabase_data(self, table: str, select_target: str, condition: list = None):
         """
         Fetch data from the given table with optional conditions.
@@ -15,6 +16,7 @@ class SupabaseDB:
             query = query.eq(condition[0], condition[1])
         response = query.execute()
         return response
+
 
     def insert_supabase_data(self, table: str, data_for_insert: dict) -> dict:
         """
@@ -39,6 +41,7 @@ class SupabaseDB:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
+
     def update_supabase_data(self, table: str, data_for_update: dict, condition: list):
         """
         Update data in the given table with conditions.
@@ -56,3 +59,11 @@ class SupabaseDB:
                 return {"error": "No data updated."}
         except Exception as e:
             return {"error": str(e)}
+        
+    
+    def insert_to_supabase_storage(self):
+        pass
+
+
+    def get_from_supabase_storage(self):
+        pass
