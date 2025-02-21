@@ -29,7 +29,6 @@ six
 sniffio
 sounddevice
 typing_extensions
-websockets
 flask
 transformers
 flask_cors
