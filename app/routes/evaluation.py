@@ -121,7 +121,7 @@ class WebhookHandler:
         
         return jsonify({'status': f'Emotion analysis job started with ID: {emotion_job_id}'}), 200
 
-# Blueprint setup
+# Blueprint setup.
 bp = Blueprint('eval', __name__)
 CORS(bp)
 webhook_handler = WebhookHandler()
