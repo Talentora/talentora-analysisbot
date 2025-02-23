@@ -11,6 +11,7 @@ h11
 httpcore
 httpx
 hume
+hume
 idna
 kiwisolver
 matplotlib
@@ -27,6 +28,7 @@ python-dateutil
 python-dotenv
 six
 sniffio
+supabase
 sounddevice
 typing_extensions
 flask
@@ -39,3 +41,7 @@ nltk
 openai
 websockets==9.1
 colorama
+pdfplumber>=0.7.0
+spacy>=3.5.0
+sentence-transformers>=2.2.0
+scikit-learn>=1.0.2
