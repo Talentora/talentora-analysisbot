@@ -1,1 +1,29 @@
-{"overall_match": 48.414239048957825, "skills_match": 58.975059000651044, "education_match": 59.093226750691734, "experience_match": 23.69354732831319, "skill_scores": {"Python": 75.18570709228516, "JavaScript": 73.85484313964844, "React": 58.253228759765626, "AWS": 55.13250885009765, "CI/CD": 45.58102569580078, "DevOps": 45.843040466308594}, "education_details": {"overall_match": 59.093226750691734, "degree_level_match": 66.66666666666666, "field_match": 51.5197868347168, "details": {"found_degree_level": true, "degree_score": 66.66666666666666, "field_score": 51.5197868347168, "education_text": "master of science in computer science | stanford university (2015-2017)\n- gpa: 3.9\n- focus on distributed systems and cloud computing\n- research assistant in cloud computing lab\nbachelor of science in computer science | uc berkeley (2011-2015)\n- gpa: 3.8\n- dean's list all semesters\n- senior project: distributed database system"}}, "experience_details": {"overall_match": 23.69354732831319, "role_similarity": 
+{
+    "overall_match": 48.414239048957825, 
+    "skills_match": 58.975059000651044, 
+    "education_match": 59.093226750691734, 
+    "experience_match": 23.69354732831319, 
+    "skill_scores": {
+        "Python": 75.18570709228516, 
+        "JavaScript": 73.85484313964844, 
+        "React": 58.253228759765626, 
+        "AWS": 55.13250885009765, 
+        "CI/CD": 45.58102569580078, 
+        "DevOps": 45.843040466308594
+    }, 
+    "education_details": {
+        "overall_match": 59.093226750691734, 
+        "degree_level_match": 66.66666666666666, 
+        "field_match": 51.5197868347168, 
+        "details": {
+            "found_degree_level": true, 
+            "degree_score": 66.66666666666666, 
+            "field_score": 51.5197868347168, 
+            "education_text": "master of science in computer science | stanford university (2015-2017)\n- gpa: 3.9\n- focus on distributed systems and cloud computing\n- research assistant in cloud computing lab\nbachelor of science in computer science | uc berkeley (2011-2015)\n- gpa: 3.8\n- dean's list all semesters\n- senior project: distributed database system"
+        }
+    }, 
+    "experience_details": {
+        "overall_match": 23.69354732831319, 
+        "role_similarity": 
+    }
+}

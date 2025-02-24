@@ -90,6 +90,7 @@ class ResumeMatcher:
         required_skills = list(job_config['skill_weights'].keys())
         
         print(f"Required skills: {', '.join(required_skills)}")
+        print(f"Job description: {job_description}")
         print(f"Resume text length: {len(resume_text)} characters")
 
         # Get semantic scores for all skills with job context
@@ -127,16 +128,16 @@ class ResumeMatcher:
         overall_match = np.mean(list(skill_scores.values()))
 
         # Print results with visualization
-        print("\nSkill Match Analysis")
-        print("=" * 80)
-        self._print_score_legend()
-        print("\nDetailed Skill Scores:")
-        print("-" * 80)
-        for skill, score in sorted_skills:
-            print(self._create_score_visualization(skill, score))
-        print("-" * 80)
-        print(self._create_score_visualization("OVERALL", overall_match))
-        print("=" * 80)
+        # print("\nSkill Match Analysis")
+        # print("=" * 80)
+        # self._print_score_legend()
+        # print("\nDetailed Skill Scores:")
+        # print("-" * 80)
+        # for skill, score in sorted_skills:
+        #     print(self._create_score_visualization(skill, score))
+        # print("-" * 80)
+        # print(self._create_score_visualization("OVERALL", overall_match))
+        # print("=" * 80)
 
         # Calculate experience and skills matches
         skills_match = np.mean([score for skill, score in skill_scores.items()])
@@ -241,7 +242,7 @@ class ResumeMatcher:
                 'found_degree_level': degree_level_score > 0,
                 'degree_score': degree_level_score,
                 'field_score': field_score,
-                'education_text': education_text
+                # 'education_text': education_text
             }
         }
 
