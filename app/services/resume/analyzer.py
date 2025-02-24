@@ -27,6 +27,9 @@ class ResumeAnalyzer:
             # Extract text from PDF
             print("Extracting text from resume...")
             resume_text = self._extract_text(resume_path)
+            print(f"Text extracted from resume: {resume_path}")
+            print(resume_text)
+            # print(resume_text)
             
             if not resume_text.strip():
                 print(f"Warning: No text extracted from {resume_path}")

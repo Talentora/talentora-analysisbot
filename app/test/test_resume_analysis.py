@@ -1,4 +1,5 @@
 import os
+import json
 from app.services.resume.analyzer import ResumeAnalyzer
 from fpdf import FPDF
 
@@ -28,7 +29,7 @@ def create_test_resume(pdf_path: str, content: str):
     pdf.output(pdf_path)
 
 def create_sample_resumes():
-    """Create sample resumes for testing."""
+    """Create sample resumes for testing and return analysis results."""
     # Create test directory
     test_dir = "app/test/test_resumes"
     os.makedirs(test_dir, exist_ok=True)
@@ -95,6 +96,17 @@ def create_sample_resumes():
     - Led migration to AWS cloud infrastructure
     - Implemented automated CI/CD workflows
     - Developed React component libraries
+
+    EDUCATION
+    Master of Science in Computer Science | Stanford University (2015-2017)
+    - GPA: 3.9
+    - Focus on Distributed Systems and Cloud Computing
+    - Research Assistant in Cloud Computing Lab
+
+    Bachelor of Science in Computer Science | UC Berkeley (2011-2015)
+    - GPA: 3.8
+    - Dean's List all semesters
+    - Senior Project: Distributed Database System
     """
     
     # Poor match resume - Sales Rep with completely different domain
@@ -129,6 +141,12 @@ def create_sample_resumes():
     - Developed regional sales strategies
     - Conducted market analysis and competitor research
     - Created sales forecasting models
+
+    EDUCATION
+    Bachelor of Business Administration | University of Michigan (2012-2016)
+    - Major in Marketing
+    - GPA: 3.5
+    - Vice President of Sales Club
     """
 
     # Moderate match resume - Junior dev with some relevant skills but lacking depth
@@ -156,6 +174,13 @@ def create_sample_resumes():
     - Built simple websites using HTML/CSS
     - Learned JavaScript fundamentals
     - Assisted with basic React components
+
+    EDUCATION
+    Bachelor of Science in Information Technology | State University (2019-2023)
+    - Minor in Computer Science
+    - GPA: 3.2
+    - Relevant Coursework: Web Development, Database Systems, Programming Fundamentals
+    - Senior Project: E-commerce Website with React and Node.js
     """
 
     # Create the PDFs
@@ -163,18 +188,20 @@ def create_sample_resumes():
     create_test_resume(os.path.join(test_dir, "poor_match.pdf"), poor_content)
     create_test_resume(os.path.join(test_dir, "moderate_match.pdf"), moderate_content)
 
-    # Test the analysis
+    # Test the analysis and collect results
     analyzer = ResumeAnalyzer()
+    results = []
     for resume_name in ["excellent_match.pdf", "moderate_match.pdf", "poor_match.pdf"]:
         pdf_path = os.path.join(test_dir, resume_name)
-        result = analyzer.analyze(pdf_path, job_description, job_config)
-        print(f"\nResults for {resume_name}:")
-        # print(result)
-        if result:
-            print(f"Overall match: {result['overall_match']:.2f}")
-            print(f"Skills match: {result['skills_match']:.2f}")
-            print(f"Experience match: {result['experience_match']:.2f}")
-            print(f"Missing skills: {', '.join(result['missing_required_skills'])}")
+        try:
+            result = analyzer.analyze(pdf_path, job_description, job_config)
+            if result:
+                results.append((resume_name.replace('.pdf', ''), result))  # Store name and result
+        except Exception as e:
+            print(f"Error analyzing resume {pdf_path}: {str(e)}")
+    
+    return results  # Return the collected results
 
 if __name__ == '__main__':
-    create_sample_resumes()
+    results = create_sample_resumes()
+    print(results)  # Print results for debugging

@@ -28,7 +28,7 @@ class ResumeAnalysisResult:
     experience_match: float  # 0-1 score
     education_match: float  # 0-1 score
     overall_match: float  # 0-1 score
-    missing_required_skills: List[str]
+    # missing_required_skills: List[str]
     additional_relevant_skills: List[str]
     years_relevant_experience: float
     education_level_match: bool
