@@ -1,21 +1,18 @@
 from flask import Flask
 from flask_cors import CORS
-from .routes import *
+from app.routes.resume_routes import resume_bp  # Import the resume routes
+from app.routes.health import health_bp  # Import the health routes
 
 def create_app(Test=False) -> Flask:
-
     app = Flask(__name__)
     app.config["TESTING"] = Test
 
     # Enable CORS
     CORS(app, resources={r"/*": {"origins": "*"}})
 
-    @app.route("/", methods=["GET"])
-    def health_check():
-        return "<p>Hello, World!</p>"
-    
-    routes.register_blueprints(app)
-   
+    # Register the blueprints
+    app.register_blueprint(resume_bp)
+    app.register_blueprint(health_bp)  # Register the health blueprint
 
     return app
 
