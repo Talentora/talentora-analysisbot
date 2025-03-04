@@ -1,4 +1,4 @@
-from app.services.lexical_feature import text_evaluation
+from app.test.lexical_feature import text_evaluation
 from app.services.score_calculation import lexical_eval
 
 question1 = "Can you introduce yourself"
