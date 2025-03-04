@@ -18,15 +18,18 @@ numpy
 opencv-python
 packaging
 pandas
+pdfplumber
 pillow
 pycparser
 pydantic
 pydantic_core
 pydub
 pyparsing
+PyPDF2
 python-dateutil
 python-dotenv
 six
+spacy
 sniffio
 sounddevice
 typing_extensions
@@ -35,6 +38,7 @@ transformers
 flask_cors
 gunicorn
 torch
+sentence-transformers
 supabase
 scikit-learn
 nltk
