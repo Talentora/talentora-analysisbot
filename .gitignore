@@ -4,3 +4,5 @@
 /venv/
 # Exclude __pycache__ directories
 __pycache__/
+
+venv/

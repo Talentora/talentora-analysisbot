@@ -8,9 +8,7 @@ def run_emotion_analysis(media_urls: List[str], text: List[str], models: Dict, c
     """Start the emotion analysis job with a callback URL."""
     client = HumeClient(api_key=HUME_API_KEY)
     job_manager = JobManager(client)
-    print("before start job function")
     job_id = job_manager.start_job(urls=media_urls, text=text, models=models, callback_url=callback_url)
-    print("after start job function")
     if not job_id:
         return None
 
