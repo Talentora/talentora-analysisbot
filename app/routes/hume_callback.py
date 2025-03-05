@@ -21,6 +21,7 @@ class HumeCallbackHandler:
 
     def validate_request(self, data, recording_id):
         """Validate incoming request data."""
+        print("[DEBUG] validate_request called")
         job_id = data.get('job_id')
         if not job_id:
             raise ValueError('job_id not provided in callback')
@@ -30,30 +31,36 @@ class HumeCallbackHandler:
 
     def get_existing_data(self, recording_id):
         """Retrieve existing data from database."""
+        print(f"[DEBUG] get_existing_data called for recording_id={recording_id}")
         transcript_data = self.database.get_supabase_data(
             "AI_summary",
             "transcript_summary",
             ["recording_id", recording_id]
         ).data[0]['transcript_summary']
+        print(f"[DEBUG] transcript_data length: {len(transcript_data)}")
 
         text_eval_data = self.database.get_supabase_data(
             "AI_summary",
             "text_eval",
             ["recording_id", recording_id]
         ).data[0]['text_eval']
+        print(f"[DEBUG] text_eval_data: {text_eval_data}")
 
         return transcript_data, text_eval_data
 
     def process_emotions(self, job_id):
         """Process emotion predictions from Hume."""
+        print(f"[DEBUG] process_emotions called for job_id={job_id}")
         predictions = self.job_manager.get_job_predictions(job_id)
         if not predictions:
             raise ValueError(f"No predictions found for job {job_id}")
+        print("[DEBUG] Predictions retrieved from Hume")
         
         return self.emotion_analyzer.process_predictions(predictions)
 
     def generate_summary(self, transcript_summary, text_eval, job_description, emotion_results):
         """Generate overall summary from all available data."""
+        print("[DEBUG] generate_summary called")
         return json.loads(ai_summary(
             transcript_summary,
             text_eval,
@@ -63,6 +70,7 @@ class HumeCallbackHandler:
 
     def update_database(self, recording_id, emotion_results, summary):
         """Update database with processed results."""
+        print("[DEBUG] update_database called")
         update_data = {
             "emotion_eval": emotion_results,
             "overall_summary": summary
@@ -72,17 +80,21 @@ class HumeCallbackHandler:
             update_data,
             ["recording_id", recording_id]
         )
+        print("[DEBUG] Database updated with new emotion & summary data")
 
     def process_callback(self, data, recording_id, job_description):
         """Process the complete Hume callback workflow."""
+        print("[DEBUG] process_callback called")
         # Validate request
         job_id = self.validate_request(data, recording_id)
+        print(f"[DEBUG] job_id={job_id}")
 
         # Get existing data
         transcript_summary, text_eval = self.get_existing_data(recording_id)
 
         # Process emotions
         emotion_results = self.process_emotions(job_id)
+        print(f"[DEBUG] emotion_results: {emotion_results}")
 
         # Generate summary
         summary = self.generate_summary(
@@ -91,6 +103,7 @@ class HumeCallbackHandler:
             job_description,
             emotion_results
         )
+        print(f"[DEBUG] Final summary: {summary}")
 
         # Update database
         self.update_database(recording_id, emotion_results, summary)
@@ -106,8 +119,10 @@ def hume_callback():
     """Handle incoming Hume API callbacks."""
     try:
         data = request.get_json()
+        print(f"[DEBUG] request data: {data}")
         recording_id = request.args.get('recording_id')
         job_description = request.args.get('job_description')
+        print(f"[DEBUG] query params => recording_id={recording_id}, job_description={job_description}")
 
         callback_handler.process_callback(data, recording_id, job_description)
         return jsonify({'status': 'success'}), 200
