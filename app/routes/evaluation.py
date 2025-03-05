@@ -152,8 +152,10 @@ def handle_webhook():
         if event_type == 'recording.started':
             return webhook_handler.handle_recording_started()
         elif event_type == 'recording.ready-to-download':
+            print("Recording ready to download")
             return webhook_handler.handle_recording_ready(data['payload'])
         elif event_type == 'batch-processor.job-finished':
+            print("Batch processor job finished")
             return webhook_handler.handle_job_finished(data['payload'])
         
         return jsonify({'error': 'Unsupported event type'}), 400
