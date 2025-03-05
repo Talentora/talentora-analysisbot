@@ -39,14 +39,14 @@ class HumeCallbackHandler:
         ).data[0]['transcript_summary']
         print(f"[DEBUG] transcript_data length: {len(transcript_data)}")
 
-        text_eval_data = self.database.get_supabase_data(
+        technical_eval_data = self.database.get_supabase_data(
             "AI_summary",
-            "text_eval",
+            "technical_eval",
             ["recording_id", recording_id]
-        ).data[0]['text_eval']
-        print(f"[DEBUG] text_eval_data: {text_eval_data}")
+        ).data[0]['technical_eval']
+        print(f"[DEBUG] technical_eval_data: {technical_eval_data}")
 
-        return transcript_data, text_eval_data
+        return transcript_data, technical_eval_data
 
     def process_emotions(self, job_id):
         """Process emotion predictions from Hume."""
@@ -58,12 +58,12 @@ class HumeCallbackHandler:
         
         return self.emotion_analyzer.process_predictions(predictions)
 
-    def generate_summary(self, transcript_summary, text_eval, job_description, emotion_results):
+    def generate_summary(self, transcript_summary, technical_eval, job_description, emotion_results):
         """Generate overall summary from all available data."""
         print("[DEBUG] generate_summary called")
         return json.loads(ai_summary(
             transcript_summary,
-            text_eval,
+            technical_eval,
             job_description,
             emotion_results
         ))
@@ -90,16 +90,17 @@ class HumeCallbackHandler:
         print(f"[DEBUG] job_id={job_id}")
 
         # Get existing data
-        transcript_summary, text_eval = self.get_existing_data(recording_id)
+        transcript_summary, technical_eval = self.get_existing_data(recording_id)
 
         # Process emotions
         emotion_results = self.process_emotions(job_id)
+        # TODO: SVR processing here
         print(f"[DEBUG] emotion_results: {emotion_results}")
 
         # Generate summary
         summary = self.generate_summary(
             transcript_summary,
-            text_eval,
+            technical_eval,
             job_description,
             emotion_results
         )

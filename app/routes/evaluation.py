@@ -9,7 +9,7 @@ from app.configs.daily_config import DAILY_API_KEY, DAILY_WEBHOOK_SECRET
 from app.configs.merge_config import MERGE_API_KEY, MERGE_ACCOUNT_TOKEN
 from app.services import score_calculation, summarize
 from app.services.sentiment import run_emotion_analysis
-from app.services.score_calculation import response_eval
+from app.services.response_analysis import evaluate_candidate
 from app.controllers.supabase_db import SupabaseDB
 from app.controllers.merge import MergeAPIClient
 from app.controllers.dailybatchprocessor import DailyBatchProcessor
@@ -109,21 +109,31 @@ class WebhookHandler:
             ["id", application_id]
         ).data[0]['job_id']
         print(f"[DEBUG] merge_job_id: {merge_job_id}")
+        
+        # TODO: 
+        # https://docs.merge.dev/ats/candidates/
+        # candidate_resume = ResumeParser.parse_pdf(candidate_resume_url)
+        # retrieve from merge using candidate key
+        # 
 
         # Process merge job data
         merge_job = self.merge_client.process_job_data(merge_job_id)
         merge_job_description = merge_job.data.get("name") + merge_job.data.get("description")
         print(f"[DEBUG] merge_job_description length: {len(merge_job_description)}")
         
-        # Update database with evaluation data
-        data_to_insert = response_eval(text_raw, merge_job_description)
-        print(f"[DEBUG] response_eval output: {data_to_insert}")
+        technical_evaluation = evaluate_candidate(
+            interview_transcript=text_raw,
+            resume=candidate_resume,
+            job_description=merge_job_description
+        )
+        
+        print(f"[DEBUG] response_eval output: {technical_evaluation}")
         
         self.database.update_supabase_data(
             "AI_summary",
             {
                 "transcript_summary": summary,
-                'text_eval': data_to_insert,
+                "technical_eval": technical_evaluation,
                 'batch-processor_transcript_id': job_id
             },
             ['recording_id', recording_id]
