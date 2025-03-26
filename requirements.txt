@@ -17,6 +17,7 @@ matplotlib
 numpy
 opencv-python
 packaging
+pandas
 pillow
 pycparser
 pydantic
@@ -27,6 +28,7 @@ python-dateutil
 python-dotenv
 six
 sniffio
+sklearn
 sounddevice
 typing_extensions
 websockets
