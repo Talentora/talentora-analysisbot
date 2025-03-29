@@ -160,7 +160,7 @@ class SupabaseDB:
             print(f"{Fore.RED}✗ Error uploading file{Style.RESET_ALL}")
             # return {"success": False, "error": str(e)}
 
-    def create_signed_url(self, bucket_id: str, files: List[str], expires_in: int = 3600) -> Optional[str]:
+    def create_signed_url(self, bucket_id: str, files: List[str], expires_in: int = 7500) -> Optional[str]:
         """
         Create a signed URL for file access.
         

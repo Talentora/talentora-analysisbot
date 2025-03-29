@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 import json
+import ast
 
 import requests
 
@@ -81,6 +82,7 @@ class JobProcessor():
                     'std_dev': 0.0
                 } 
         return aggregates
+    
 
     def process_predictions(self, data, write_to_csv = False):
         """
@@ -120,9 +122,9 @@ class JobProcessor():
                             for emotion in prosody_prediction.get("emotions", []):
                                 prosody_data_emotions[emotion.get("name")].append(emotion.get("score", 0.0))
             
-            #now that we have our dict of emotion lists for this video (across all 3 modalities)
-            #generate a dict of aggregates for each emotion and set that as a value for the aggregates dictionairy, where the
-            #key is the video name - example: {"video_1.mp4" : {"admiration" : {"mean" : 0.0, "min" : 0.0, "max" : 0.0,...}, ...}, ...}                            
+                #now that we have our dict of emotion lists for this video (across all 3 modalities)
+                #generate a dict of aggregates for each emotion and set that as a value for the aggregates dictionairy, where the
+                #key is the video name - example: {"video_1.mp4" : {"admiration" : {"mean" : 0.0, "min" : 0.0, "max" : 0.0,...}, ...}, ...}                            
             self.face_aggregates[file_name] = self.calculate_aggregates(face_data_emotions) 
             self.language_aggregates[file_name] = self.calculate_aggregates(language_data_emotions)
             self.prosody_aggregates[file_name] = self.calculate_aggregates(prosody_data_emotions)
@@ -141,7 +143,9 @@ class JobProcessor():
             face_df.to_csv('face_predictions.csv', index=False)
             prosody_df.to_csv('prosody_predictions.csv', index=False)
             language_df.to_csv('language_predictions.csv', index=False)
-            
+            print(f"Generated {len(face_df)} number of samples for face_df")
+            print(f"Generated {len(prosody_df)} number of samples for prosody_df")
+            print(f"Generated {len(language_df)} number of samples for language_df")
         
         return face_df, prosody_df, language_df
     
@@ -169,9 +173,6 @@ class JobProcessor():
                     f.write(chunk)
 
             df_labels = pd.read_csv(temp_file_path)
-            print("\nFull Labeled CSV DataFrame (Before Filtering):")
-            print(df_labels.head())
-
             # Only keep rows where Worker equals "AGGR"
             df_labels = df_labels[df_labels['Worker'].str.upper() == "AGGR"].copy()
 
@@ -181,21 +182,35 @@ class JobProcessor():
             
             #keep only the participant ID and the now Aggregate ReccomendHiring Score 
             df_labels = df_labels[['participant_id', 'RecommendHiring']]
-
+            print("Labels Retrieved...")
             return df_labels
         except Exception as e:
             print(f"Error loading labeled scores: {e}")
             return pd.DataFrame()
         
     def merge_data(self, labels, face, prosody, language):
+        print("Merging data and labels...")
+      
+        # Create participant_id columns from video_id
         face['participant_id'] = face['video_id'].str.removesuffix('.mp4').str.lower()
         prosody['participant_id'] = prosody['video_id'].str.removesuffix('.mp4').str.lower()
         language['participant_id'] = language['video_id'].str.removesuffix('.mp4').str.lower()
-        
+
+        # Merge each modality with labels
         merged_lang = pd.merge(language, labels, on="participant_id", how="inner")
         merged_face = pd.merge(face, labels, on="participant_id", how="inner")
-        merged_pros = pd.merge(face, prosody, on="participant_id", how="inner")
-
+        merged_pros = pd.merge(prosody, labels, on="participant_id", how="inner")
+        
+        # Optionally, set the video_id as the index to keep track of each video.
+        # (Make sure 'video_id' is still in the merged DataFrame. If not, you might use 'participant_id' or keep video_id before merging.)
+        merged_lang = merged_lang.set_index("participant_id")
+        merged_face = merged_face.set_index("participant_id")
+        merged_pros = merged_pros.set_index("participant_id")
+        
+        merged_lang = merged_lang.drop(columns=["video_id"], errors="ignore")
+        merged_face = merged_face.drop(columns=["video_id"], errors="ignore")
+        merged_pros = merged_pros.drop(columns=["video_id"], errors="ignore")
+        
         return merged_face, merged_pros, merged_lang
     
     def generate_mmr_compatible_input(self, merged_face, merged_pros, merged_lang):
@@ -204,12 +219,12 @@ class JobProcessor():
         verifies that they have the same number of samples, stores them
         in a dictionary with modality names as keys, and extracts the labels.
         
-        Assumes that the label column is named 'score' in the merged facial DataFrame.
+        Assumes that the label column is named 'RecommendHiring' in the merged facial DataFrame.
         
         Returns:
             tuple: (data_dict, labels)
                 data_dict: A dictionary with keys 'facial', 'prosody', and 'language'
-                        containing the corresponding merged DataFrames.
+                        containing the corresponding merged DataFrames with the label column removed.
                 labels: A pandas Series with the label values.
         """
         # Check that each modality has the same number of samples
@@ -220,6 +235,18 @@ class JobProcessor():
         if not (n_face == n_pros == n_lang):
             raise ValueError("All modalities must have the same number of samples.")
         
+        # Extract labels from the facial dataframe
+        if 'RecommendHiring' in merged_face.columns:
+            labels = merged_face['RecommendHiring']
+            # Remove the label column from the facial dataframe
+            merged_face = merged_face.drop(columns=['RecommendHiring'])
+        else:
+            raise ValueError("Label column 'RecommendHiring' not found in merged data. Please verify the CSV or merge function.")
+        
+        # Remove the label column from other modalities if it exists
+        merged_pros = merged_pros.drop(columns=['RecommendHiring'], errors='ignore')
+        merged_lang = merged_lang.drop(columns=['RecommendHiring'], errors='ignore')
+        
         # Store the merged data in a dictionary
         self.dataframes = {
             'facial': merged_face,
@@ -227,46 +254,95 @@ class JobProcessor():
             'language': merged_lang
         }
         
-        # Extract labels from one of the merged dataframes.
-        # Update 'score' to the correct label column name if needed.
-        if 'RecommendHiring' in merged_face.columns:
-            labels = merged_face['RecommendHiring']
-        else:
-            raise ValueError("Label column 'score' not found in merged data. Please verify the CSV or merge function.")
-        
         return self.dataframes, labels
     
-    def generate_dataframes_from_csv(self, face_csv_path, pros_csv_path, lang_csv_path):
+    def expand_dict_columns(self, df):
+        """
+        For any column in df that contains string representations of dictionaries,
+        parse the strings into dictionaries and expand them into separate columns.
+        The new columns will be prefixed by the original column name.
+        """
+        for col in df.columns:
+            # Only consider object-type columns.
+            if df[col].dtype == 'object':
+                non_null = df[col].dropna()
+                if not non_null.empty:
+                    sample = non_null.iloc[0]
+                    # Check if the string looks like a dictionary
+                    if isinstance(sample, str) and sample.strip().startswith("{") and sample.strip().endswith("}"):
+                        try:
+                            # Convert the column values to dictionaries
+                            parsed = df[col].apply(lambda x: ast.literal_eval(x) if pd.notnull(x) else {})
+                            # Expand the dictionaries into a DataFrame
+                            expanded = parsed.apply(pd.Series)
+                            # Optionally, add a prefix to the new columns
+                            expanded = expanded.add_prefix(f"{col}_")
+                            # Drop the original column and join the new columns
+                            df = df.drop(columns=[col]).join(expanded)
+                        except Exception as e:
+                            print(f"Error expanding column {col}: {e}")
+        return df
+    
+    def generate_dataframes_from_csv(self, face_csv_path, pros_csv_path, lang_csv_path, 
+                                    face_csv_path2=None, pros_csv_path2=None, lang_csv_path2=None):
         """
         Reads CSV files for facial, prosody, and language modalities, converts them into pandas DataFrames,
-        verifies that all have the same number of samples, and stores them in a dictionary.
+        verifies that each set (if only one set is provided, or each set separately if two sets are provided)
+        has the same number of samples, optionally concatenates a second set of CSVs into the first set,
+        and expands any columns that contain dictionary strings (e.g., emotion aggregates) into separate numeric columns.
 
         Parameters:
-            face_csv_path (str): File path to the CSV file with facial features.
-            pros_csv_path (str): File path to the CSV file with prosody features.
-            lang_csv_path (str): File path to the CSV file with language features.
+            face_csv_path (str): File path to the CSV file with facial features (set 1).
+            pros_csv_path (str): File path to the CSV file with prosody features (set 1).
+            lang_csv_path (str): File path to the CSV file with language features (set 1).
+            face_csv_path2 (str, optional): File path to a second CSV file with facial features.
+            pros_csv_path2 (str, optional): File path to a second CSV file with prosody features.
+            lang_csv_path2 (str, optional): File path to a second CSV file with language features.
 
         Returns:
-            dict: A dictionary with keys 'facial', 'prosody', and 'language' containing the corresponding DataFrames.
+            tuple: A tuple (df_face, df_pros, df_lang) containing the processed (and merged, if applicable) DataFrames.
         """
-        import pandas as pd
-
-        # Read CSV files into DataFrames
+        # Read the first set of CSV files into DataFrames
+        print("Generating DataFrames from saved CSV files (set 1)...")
         df_face = pd.read_csv(face_csv_path)
         df_pros = pd.read_csv(pros_csv_path)
         df_lang = pd.read_csv(lang_csv_path)
 
-        # Ensure all DataFrames have the same number of rows (samples)
+        # Check that set 1 DataFrames have the same number of rows
         if not (len(df_face) == len(df_pros) == len(df_lang)):
-            raise ValueError("All CSV files must have the same number of rows/samples.")
-
+            raise ValueError("Set 1: All CSV files must have the same number of rows/samples.")
+        
+        # If a second set of CSV paths is provided, read and concatenate them
+        if face_csv_path2 and pros_csv_path2 and lang_csv_path2:
+            print("Generating DataFrames from saved CSV files (set 2)...")
+            df_face2 = pd.read_csv(face_csv_path2)
+            df_pros2 = pd.read_csv(pros_csv_path2)
+            df_lang2 = pd.read_csv(lang_csv_path2)
+            
+            # Check that set 2 DataFrames have the same number of rows
+            if not (len(df_face2) == len(df_pros2) == len(df_lang2)):
+                raise ValueError("Set 2: All CSV files must have the same number of rows/samples.")
+            
+            print("Concatenating set 1 and set 2 DataFrames...")
+            df_face = pd.concat([df_face, df_face2], ignore_index=True)
+            df_pros = pd.concat([df_pros, df_pros2], ignore_index=True)
+            df_lang = pd.concat([df_lang, df_lang2], ignore_index=True)
+        
+        print("All CSV files have been processed. Expanding dictionary columns...")
+        # Expand any dictionary columns into separate columns
+        df_face = self.expand_dict_columns(df_face)
+        df_pros = self.expand_dict_columns(df_pros)
+        df_lang = self.expand_dict_columns(df_lang)
+        
+        print("Dictionary expansion successful. Final face DataFrame preview:")
+        print(df_face.head())
+        
         return df_face, df_pros, df_lang
-
 
 
 def main():
     # Specify the path to your JSON file
-    json_file_path = '/Users/abdelazimlokma/Downloads/output.json'
+    json_file_path = '/Users/abdelazimlokma/Desktop/new_hume2.json'
 
     # Create an instance of JobProcessor
     processor = JobProcessor()
