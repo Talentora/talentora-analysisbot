@@ -12,7 +12,7 @@ from test.job_processor import JobProcessor
 
 class MultiModalRegressor:
     def __init__(self, data, target, modalities=['facial', 'prosody', 'language'], 
-                 svr_params=None, meta_params=None, num_top_features=10, k_fold_splits = 6):
+                 svr_params=None, meta_params=None, num_top_features=6, k_fold_splits = 6):
         """
         Parameters:
         - data: dict where keys are modality names and values are feature matrices (DataFrames or numpy arrays)
@@ -29,7 +29,7 @@ class MultiModalRegressor:
 
         # Default grid parameters for SVR models if none are provided
         self.svr_params = svr_params if svr_params is not None else {
-            'svr__C': [0.1, 1, 10],
+            'svr__C': [ 0.1, 0.2, 0.8, 0.9, 1, 10],
             'svr__gamma': ['scale', 'auto'],
             'svr__kernel': ['rbf']
         }
@@ -59,7 +59,7 @@ class MultiModalRegressor:
         for mod in self.modalities:
             X = self.data[mod]
             y = self.target
-            ridge = Ridge(alpha=0.2)
+            ridge = Ridge(alpha=0.36)
             ridge.fit(X, y)
             # Rank features by the absolute value of their coefficients
             coefs = np.abs(ridge.coef_)
