@@ -12,7 +12,7 @@ from test.job_processor import JobProcessor
 
 class MultiModalRegressor:
     def __init__(self, data, target, modalities=['facial', 'prosody', 'language'], 
-                 svr_params=None, meta_params=None, num_top_features=6, k_fold_splits = 6):
+                 svr_params=None, meta_params=None, num_top_features=41, k_fold_splits = 6):
         """
         Parameters:
         - data: dict where keys are modality names and values are feature matrices (DataFrames or numpy arrays)
@@ -29,7 +29,7 @@ class MultiModalRegressor:
 
         # Default grid parameters for SVR models if none are provided
         self.svr_params = svr_params if svr_params is not None else {
-            'svr__C': [ 0.1, 0.2, 0.8, 0.9, 1, 10],
+            'svr__C': [ 0.1, 0.2, 0.8, 0.9, 1, 10, 11, 12],
             'svr__gamma': ['scale', 'auto'],
             'svr__kernel': ['rbf']
         }
@@ -59,7 +59,7 @@ class MultiModalRegressor:
         for mod in self.modalities:
             X = self.data[mod]
             y = self.target
-            ridge = Ridge(alpha=0.36)
+            ridge = Ridge(alpha=0.19)
             ridge.fit(X, y)
             # Rank features by the absolute value of their coefficients
             coefs = np.abs(ridge.coef_)
@@ -185,16 +185,16 @@ class MultiModalRegressor:
 # Example usage remains largely unchanged.
 if __name__ == "__main__":
     print("Loading hume data")
-    face_csv_path = "face_predictions_1.csv"
-    pros_csv_path = "prosody_predictions_1.csv"
-    lang_csv_path = "language_predictions_1.csv"
-    face_csv_path_secondary = "face_predictions.csv"
-    pros_csv_path_secondary = "prosody_predictions.csv"
-    lang_csv_path_secondary = "language_predictions.csv"
+    face_csv_path = "face_predictions.csv"
+    pros_csv_path = "prosody_predictions.csv"
+    lang_csv_path = "language_predictions.csv"
+    # face_csv_path_secondary = "face_predictions.csv"
+    # pros_csv_path_secondary = "prosody_predictions.csv"
+    # lang_csv_path_secondary = "language_predictions.csv"
     
     # Load CSV data into DataFrames
     job = JobProcessor()
-    df_face, df_pros, df_lang = job.generate_dataframes_from_csv(face_csv_path, pros_csv_path, lang_csv_path, face_csv_path_secondary, pros_csv_path_secondary, lang_csv_path_secondary)
+    df_face, df_pros, df_lang = job.generate_dataframes_from_csv(face_csv_path, pros_csv_path, lang_csv_path)
     
     # Load target labels
     labels = job.load_labels()
@@ -209,8 +209,7 @@ if __name__ == "__main__":
     modalities = ['facial', 'prosody', 'language']
 
     indices = np.arange(len(target))
-    # 80% training, 20% testing
-    train_idx, test_idx = train_test_split(indices, test_size=0.2, random_state=42)
+    train_idx, test_idx = train_test_split(indices, test_size=0.3, random_state=42)
     
     # Create modality-specific training and test data dictionaries
     train_data = {mod: model_data[mod].iloc[train_idx] for mod in modalities}

@@ -342,7 +342,7 @@ class JobProcessor():
 
 def main():
     # Specify the path to your JSON file
-    json_file_path = '/Users/abdelazimlokma/Desktop/new_hume2.json'
+    json_file_path = '/Users/abdelazimlokma/Desktop/new_hume_3.json'
 
     # Create an instance of JobProcessor
     processor = JobProcessor()
