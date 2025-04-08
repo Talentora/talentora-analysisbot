@@ -83,6 +83,11 @@ class JobProcessor():
                 } 
         return aggregates
     
+    def get_dataframes(self, data, write_to_csv = False):
+        if not self.face_df or not self.prosody_df or not self.language_df:
+            raise ValueError("Dataframes not found. Please run process_predictions first.")
+        return self.face_df, self.prosody_df, self.language_df
+    
 
     def process_predictions(self, data, write_to_csv = False):
         """
@@ -189,6 +194,7 @@ class JobProcessor():
             return pd.DataFrame()
         
     def merge_data(self, labels, face, prosody, language):
+        """Merges the labels with the facial, prosody, and language dataframes."""
         print("Merging data and labels...")
       
         # Create participant_id columns from video_id
@@ -311,6 +317,8 @@ class JobProcessor():
         # Check that set 1 DataFrames have the same number of rows
         if not (len(df_face) == len(df_pros) == len(df_lang)):
             raise ValueError("Set 1: All CSV files must have the same number of rows/samples.")
+        print("Total number of samples in dataset: ", len(df_face))
+
         
         # If a second set of CSV paths is provided, read and concatenate them
         if face_csv_path2 and pros_csv_path2 and lang_csv_path2:
@@ -334,8 +342,8 @@ class JobProcessor():
         df_pros = self.expand_dict_columns(df_pros)
         df_lang = self.expand_dict_columns(df_lang)
         
-        print("Dictionary expansion successful. Final face DataFrame preview:")
-        print(df_face.head())
+        # print("Dictionary expansion successful. Final face DataFrame preview:")
+        # print(df_face.head())
         
         return df_face, df_pros, df_lang
 

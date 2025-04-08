@@ -7,8 +7,9 @@ from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.model_selection import GridSearchCV, KFold, train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
+import joblib
 
-from test.job_processor import JobProcessor
+from ensemble_model.job_processor import JobProcessor
 
 class MultiModalRegressor:
     def __init__(self, data, target, modalities=['facial', 'prosody', 'language'], 
@@ -181,6 +182,21 @@ class MultiModalRegressor:
         r2 = r2_score(true_values, predictions)
         print(f"MSE: {mse}, MAE: {mae}, R2: {r2}")
         return mse, mae, r2
+    
+    @classmethod # like a static method in java
+    def save_model(self, filename):
+        """
+        Saves the current instance of MultiModalRegressor (including all models, weights, and hyperparameters) to a file.
+        """
+        import joblib
+        joblib.dump(self, filename)
+
+    def load_model(cls, filename):
+        """
+        Loads a saved instance of MultiModalRegressor from a file.
+        """
+        import joblib
+        return joblib.load(filename)
 
 # Example usage remains largely unchanged.
 if __name__ == "__main__":
@@ -253,6 +269,7 @@ if __name__ == "__main__":
     # Evaluate performance on the held-out test set.
     mmr.evaluate(test_target, test_predictions)
     
+    mmr.save_model("mmr_model.pkl")
     # Plot true target vs. predicted values for the test data.
     plt.figure(figsize=(8, 8))
     plt.scatter(test_target, test_predictions, alpha=0.7, label='Predictions')

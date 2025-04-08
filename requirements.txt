@@ -25,7 +25,7 @@ pydantic_core
 pydub
 pyparsing
 python-dateutil
-python-dotenv
+python-dotenv>=1.0.0
 six
 sniffio
 sklearn
