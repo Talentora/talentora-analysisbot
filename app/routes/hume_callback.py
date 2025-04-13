@@ -8,7 +8,8 @@ from app.controllers.hume_job_manager import JobManager
 from app.services.sentiment_analysis import EmotionAnalyzer
 from app.controllers.supabase_db import SupabaseDB
 from app.services.summarize import ai_summary
-
+from app.services.mmr.data_preprocessor import DataPreprocessor
+from app.services.mmr.multi_modal_regressor import MultiModalRegressor
 class HumeCallbackHandler:
     """Handles processing of Hume API callbacks and data management."""
     
@@ -16,8 +17,10 @@ class HumeCallbackHandler:
         """Initialize components needed for processing Hume callbacks."""
         self.client = HumeClient(api_key=HUME_API_KEY)
         self.job_manager = JobManager(self.client)
-        self.emotion_analyzer = EmotionAnalyzer(HUME_API_KEY)
+        # self.emotion_analyzer = EmotionAnalyzer(HUME_API_KEY)
         self.database = SupabaseDB()
+        self.mmr_preprocessor = DataPreprocessor()
+        self.mmr = MultiModalRegressor().load_model("app/services/mmr/mmr_model.pkl")
 
     def validate_request(self, data, recording_id):
         """Validate incoming request data."""
@@ -50,13 +53,24 @@ class HumeCallbackHandler:
 
     def process_emotions(self, job_id):
         """Process emotion predictions from Hume."""
+        #NOTE: This is where the MMR model is used to process the predictions
         print(f"[DEBUG] process_emotions called for job_id={job_id}")
         predictions = self.job_manager.get_job_predictions(job_id)
         if not predictions:
             raise ValueError(f"No predictions found for job {job_id}")
         print("[DEBUG] Predictions retrieved from Hume")
         
-        return self.emotion_analyzer.process_predictions(predictions)
+        # Pre-process the Hume data, generate the aggregates & timelines, and prepare the dataframes for the SVR models
+        json_resp = self.mmr_preprocessor.process_single_prediction_from_obj(predictions)
+        input = self.mmr_preprocessor.prepare_single_prediction(self.mmr_preprocessor.get_model_input_dataframes())
+        
+        # Get predictions from individual SVR models and meta model        
+        overall_score, svr_predictions = float(round(self.mmr.predict(new_data=input)[0], 2))
+        
+        # feed predictions into json_resp to complete the final results
+        final_results = self.mmr_preprocessor.update_prediction_results(json_resp, overall_score, svr_predictions)
+        
+        return final_results
 
     def generate_summary(self, transcript_summary, text_eval, job_description, emotion_results):
         """Generate overall summary from all available data."""
