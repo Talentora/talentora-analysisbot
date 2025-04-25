@@ -1,14 +1,24 @@
 import PyPDF2
 from sentence_transformers import SentenceTransformer
 from typing import Dict, List
-
+from bs4 import BeautifulSoup
 from app.services.resume.matcher import ResumeMatcher
 
 class ResumeAnalyzer:
+    """Class for extracting text from a resume and analyzing it against required skills (skill analysis done with Resume Matcher)."""
     def __init__(self):
         """Initialize the resume analyzer with required models."""
         self.sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
         self.matcher = ResumeMatcher(self.sentence_model)
+    
+    def extract_text_from_html(self, html_string):
+        # Parse the HTML
+        soup = BeautifulSoup(html_string, 'html.parser')
+        
+        # Get all text, stripping whitespace and joining with newlines
+        text = '\n'.join(line.strip() for line in soup.stripped_strings)
+        
+        return text
 
     def analyze(self, resume_path: str, job_description: str, job_config: Dict) -> Dict:
         """
@@ -34,7 +44,8 @@ class ResumeAnalyzer:
                 return None
             
             # Analyze the resume text against required skills
-            return self.matcher.analyze_resume(resume_text, job_description, job_config)
+            cleaned_job_description = self.extract_text_from_html(job_description) #clean the HTML tags from job description 
+            return self.matcher.analyze_resume(resume_text, cleaned_job_description, job_config)
             
         except FileNotFoundError:
             print(f"Error: Resume file not found at {resume_path}")

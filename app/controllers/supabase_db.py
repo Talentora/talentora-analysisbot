@@ -5,6 +5,7 @@ from typing import Optional, List, Dict, Union
 from colorama import Fore, Style, init
 from tqdm import tqdm
 import time
+import supabase
 
 # Initialize colorama
 init()
@@ -162,6 +163,22 @@ class SupabaseDB:
         except Exception as e:
             print(f"{Fore.RED}✗ Error uploading file{Style.RESET_ALL}")
             # return {"success": False, "error": str(e)}
+            
+    def get_company_token(self, job_id: str) -> str:
+        """
+        Retrieves the company token for a given job ID.
+
+        :param job_id: The Merge job ID.
+        :return: The company token for the given job."""
+        response = (
+            self.client.table("jobs")
+            .select("companies:company_id(company_token)")
+            .eq("id", job_id)
+            .maybe_single()
+            .execute()
+        )
+        
+        return response.data["companies"]["company_token"]
 
     def create_signed_url(self, bucket_id: str, files: List[str], expires_in: int = 3600) -> Optional[str]:
         """
@@ -187,7 +204,34 @@ class SupabaseDB:
         except Exception as e:
             print(f"{Fore.RED}✗ Error creating signed URL: {str(e)}{Style.RESET_ALL}")
             return None
+    
+    
+    def save_application(self, merge_application_id: str, merge_job_id: str) -> str:
+        """Save application to database and return application ID"""
+        response = self.client.table("applications").insert({
+            "applicant_id": None,
+            "merge_application_id": merge_application_id,
+            "job_id": merge_job_id,
+            "status": None
+        }).execute()
+        
+        return response.data[0]['id']
 
+    def save_analysis(self, application_id: str, analysis_result: dict) -> None:
+        """Save analysis results to database"""
+        self.client.table("ai_summaries").insert({
+            "application_id": application_id,
+            "resume_analysis": analysis_result,
+        }).execute()
+        
+    def get_job_config(self, job_id: str) -> dict:
+        """Fetch job configuration from database""" #TODO: implement this
+        return 
+    
+        
+        
+    
+        
 
 
 

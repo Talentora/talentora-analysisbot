@@ -10,6 +10,7 @@ from app.configs.job_analysis_config import SECTION_HEADERS
 from app.services.resume.skills_extractor import SkillsExtractor
 
 class ResumeParser:
+    """Class for parsing a resume into experience, education, and skills. Uses SkillsExtractor to extract skills."""
     def __init__(self, nlp_model):
         self.nlp = nlp_model
         self.skills_extractor = SkillsExtractor(nlp_model)
