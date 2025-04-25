@@ -1,8 +1,16 @@
-# roborecruiter-analysisbot
-This repo contains the ML models that score a candidate and determine if they're a good fit for a role. 
+# Interview Analysis Bot
 
-(e.g softskills analysis, cultural fit analysis, technical skills analysis, etc.)
+An intelligent application designed to analyze and evaluate interview transcripts using AI. This tool helps assess interview quality and provides insights into candidate responses.
 
+## 🚀 Features
+
+- Automated interview transcript analysis
+- Real-time processing of interview data
+- Support for different interview positions and durations
+- RESTful API endpoints for integration
+- Structured evaluation of candidate responses
+
+## 📋 Project Structure
 
 ## Run instructions
 1. Run docker
