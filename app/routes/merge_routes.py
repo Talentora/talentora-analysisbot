@@ -1,25 +1,65 @@
 from flask import Blueprint, request, jsonify
 from app.controllers.merge_handler import MergeHandler
+import hmac, hashlib, base64
+from dotenv import load_dotenv
+import os
 
+from app.controllers.supabase_db import SupabaseDB
+
+load_dotenv()
+
+MERGE_WEBHOOK_SECRET = os.getenv("MERGE_WEBHOOK_SECRET")
 
 merge_bp = Blueprint("merge", __name__)
 
-@merge_bp.route("/merge/webhook", methods=["POST"])
-def merge_webhook():
-    try:
-        payload = request.get_json()
+def verify_signature(raw_body : bytes, webhook_signature : str):
+    """
+    Verify the signature of the request
+    """
+    hmac_digest = hmac.new(MERGE_WEBHOOK_SECRET.encode("utf-8"), raw_body, hashlib.sha256).digest()
+    b64_encoded = base64.urlsafe_b64encode(hmac_digest).decode()
+    return hmac.compare_digest(b64_encoded, webhook_signature)
 
-        # Extract core fields from payload
-        data = payload.get("data", {})
-        application_id = data.get("id")
-        candidate_id = data.get("candidate_id")  
-        job_id = data.get("job_id")
-       
+
+
+@merge_bp.route("/merge/new-job", methods=["POST"])
+def new_job():
+    sig = request.headers.get("X-Merge-Webhook-Signature", "")
+    raw = request.get_data() # returns bytes, no need to decode
+    if not verify_signature(raw, sig):
+        return jsonify({"error": "Invalid signature"}), 401 
+    payload = request.get_json(force=True)
+
+    if not payload:
+        raise ValueError("No data found in payload")
+
+    try:
         handler = MergeHandler()
-        handler.run_resume_analysis(candidate_id, job_id, application_id)
+        handler.handle_new_job(payload)
         
+        return jsonify({"message": "New job created successfully"}), 200
     except Exception as e:
-        print(f"Error in merge_webhook: {str(e)}")
+        print(f"Error in merge_webhook - new_job: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@merge_bp.route("/merge/new-application", methods=["POST"])
+def new_application():
+    sig = request.headers.get("X-Merge-Webhook-Signature", "")
+    raw = request.get_data()  # returns bytes
+    if not verify_signature(raw, sig):
+        return jsonify({"error": "Invalid signature"}), 401
+    try:
+        payload = request.get_json(force=True)
+
+        handler = MergeHandler()
+
+        if not handler.handle_new_application(payload):
+            return jsonify({"error": "Failed to process application"}), 500
+        
+        
+        return jsonify({"message": "Application processed"}), 200
+    except Exception as e:
+        print(f"Error in merge_webhook - new_application: {str(e)}")
         return jsonify({"error": str(e)}), 500
    
 
