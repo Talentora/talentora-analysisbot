@@ -1,5 +1,6 @@
 import os
 import tempfile
+from flask import json
 import openai
 import requests
 import requests
@@ -203,7 +204,7 @@ class MergeHandler:
         )
         return response.choices[0].message.content
         
-    def validate_job_config(job_config: dict, *, eps: float = 1e-6) -> None:
+    def validate_job_config(self, job_config: dict, *, eps: float = 1e-6) -> None:
         """
         Validates the structure and numeric constraints of a job_config dict.
         Raises ValueError if any check fails.
@@ -283,7 +284,10 @@ class MergeHandler:
         """
         job_desc = data.get("description")   
         
-        job_config = self.generate_ai_job_config(job_desc)
+        job_config_str = self.generate_ai_job_config(job_desc)
+        
+        #convert string resp to dict for upload
+        job_config = json.loads(job_config_str)
         
         if not self.validate_job_config(job_config):
             raise ValueError("Invalid job config")
