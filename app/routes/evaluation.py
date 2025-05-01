@@ -121,19 +121,19 @@ class WebhookHandler:
         merge_job_description = merge_job.data.get("name") + merge_job.data.get("description")
         print(f"[DEBUG] merge_job_description length: {len(merge_job_description)}")
         
-        technical_evaluation = evaluate_candidate(
+        text_evaluation = evaluate_candidate(
             interview_transcript=text_raw,
             resume=candidate_resume,
             job_description=merge_job_description
         )
         
-        print(f"[DEBUG] response_eval output: {technical_evaluation}")
+        print(f"[DEBUG] response_eval output: {text_evaluation}")
         
         self.database.update_supabase_data(
             "AI_summary",
             {
                 "transcript_summary": summary,
-                "technical_eval": technical_evaluation,
+                "text_eval": text_evaluation,
                 'batch-processor_transcript_id': job_id
             },
             ['recording_id', recording_id]
