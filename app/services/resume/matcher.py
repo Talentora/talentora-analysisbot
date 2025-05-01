@@ -5,6 +5,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from colorama import Fore, Back, Style
 from app.configs.job_analysis_config import SECTION_HEADERS
 class ResumeMatcher:
+    """Class for analyzing a resume against required skills, education, and experience."""
     def __init__(self, sentence_model):
         """Initialize with a sentence transformer model for semantic matching."""
         self.sentence_model = sentence_model

@@ -5,6 +5,7 @@ from typing import Optional, List, Dict, Union
 from colorama import Fore, Style, init
 from tqdm import tqdm
 import time
+import supabase
 
 # Initialize colorama
 init()
@@ -162,6 +163,40 @@ class SupabaseDB:
         except Exception as e:
             print(f"{Fore.RED}✗ Error uploading file{Style.RESET_ALL}")
             # return {"success": False, "error": str(e)}
+            
+    def get_company_token(self, merge_linked_account_id: str) -> str:
+        """
+        Retrieves the company token for a given Merge company account ID.
+
+        :param merge_company_id: The Merge company account ID.
+        :return: The company token for the given job."""     
+        response = (
+            self.client.table("jobs")
+            .select("merge_account_token")
+            .eq("merge_linked_account_id", merge_linked_account_id)
+            .execute()
+        )
+        # Validate response and return token
+        if not response.data or len(response.data) == 0:
+            raise ValueError(f"No company token found for merge_company_id {merge_linked_account_id}")
+        return response.data[0]["merge_account_token"]
+    
+    def get_company_id(self, merge_linked_account_id: str) -> str:
+        """
+        Retrieves the company id for a given Merge company account ID.
+
+        :param merge_company_id: The Merge company account ID.
+        :return: The company token for the given job."""     
+        response = (
+            self.client.table("companies")
+            .select("id")
+            .eq("merge_linked_account_id", merge_linked_account_id)
+            .execute()
+        )
+        # Validate response and return token
+        if not response.data or len(response.data) == 0:
+            raise ValueError(f"No company token found for merge_company_id {merge_linked_account_id}")
+        return response.data[0]["id"]
 
     def create_signed_url(self, bucket_id: str, files: List[str], expires_in: int = 3600) -> Optional[str]:
         """
@@ -187,7 +222,68 @@ class SupabaseDB:
         except Exception as e:
             print(f"{Fore.RED}✗ Error creating signed URL: {str(e)}{Style.RESET_ALL}")
             return None
-
+    
+    def insert_new_ai_summary(self, merge_application_id: str, data: dict) -> dict:
+        """Insert new AI summary into database"""
+        try:
+            response = self.client.table("ai_summaries").insert({
+                "merge_application_id": merge_application_id,
+                "ai_summary": data
+            }).execute()
+            return response.data[0]['id']
+        except Exception as e:
+            print(f"{Fore.RED}✗ Error inserting new AI Summary Row: {str(e)}{Style.RESET_ALL}")
+            raise e
+    
+    
+    def insert_new_application(self, merge_application_id: str, merge_job_id: str) -> str:
+        """Save application to database and return application ID"""
+        try:
+            response = self.client.table("applications").insert({
+                "merge_application_id": merge_application_id,
+                "job_id": self.get_job_id(merge_job_id),
+            }).execute()
+        
+            return response.data[0]['id']
+        except Exception as e:
+            print(f"{Fore.RED}✗ Error inserting new application: {str(e)}{Style.RESET_ALL}")
+            raise e
+        
+    def get_job_resume_config(self, job_merge_id: str) -> dict:
+        """Fetch job configuration from database"""
+        try:
+            response = self.client.table("jobs").select("job_resume_config").eq("merge_id", job_merge_id).execute()
+            return response.data[0]['job_resume_config']
+        except Exception as e:
+            print(f"{Fore.RED}✗ Error fetching job configuration: {str(e)}{Style.RESET_ALL}")
+            raise e
+    
+    def get_job_id(self, merge_job_id: str) -> str:
+        """Fetch job ID from database"""
+        try:
+            response = self.client.table("jobs").select("id").eq("merge_id", merge_job_id).execute()
+            return response.data[0]['id']
+        except Exception as e:
+            print(f"{Fore.RED}✗ Error fetching job ID: {str(e)}{Style.RESET_ALL}")
+            raise e
+        
+    def insert_new_job(self, job_config: dict, payload: dict) -> None:
+        """Save job configuration to database"""
+        try:
+            self.client.table("jobs").insert({
+                "job_resume_config": job_config,
+                "merge_id": payload.get("data").get("id"),
+                "company_id": self.get_company_id(payload.get("data").get("linked_account_id"))
+            }).execute()
+        except Exception as e:
+            print(f"{Fore.RED}✗ Error inserting new job: {str(e)}{Style.RESET_ALL}")
+            raise e
+        
+        return True
+        
+        
+    
+        
 
 
 

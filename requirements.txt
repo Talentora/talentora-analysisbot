@@ -45,3 +45,4 @@ nltk
 openai
 websockets
 colorama
+merge-ats-client

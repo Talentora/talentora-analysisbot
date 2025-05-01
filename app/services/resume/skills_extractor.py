@@ -6,6 +6,7 @@ import torch
 import re
 
 class SkillsExtractor:
+    """Class for extracting skills from a resume using semantic analysis and NLP."""
     def __init__(self, nlp_model):
         self.nlp = nlp_model
         
