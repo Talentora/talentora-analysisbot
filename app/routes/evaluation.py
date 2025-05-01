@@ -5,7 +5,7 @@ import json
 from app.controllers.aws_s3 import fetch_from_s3
 from app.controllers.supabase_db import SupabaseDB
 from app.services.text_analysis import analyze_interview_parallel
-
+from app.utils.request_handler import handle_success, handle_server_error
 
 # New endpoint to handle notifications from the analysis bot
 @bp.route('/analysis-bot', methods=['POST'])
@@ -52,20 +52,6 @@ def analysis_bot():
             ['application_id', application_id]
         )
 
-        # grab the S3‐hosted transcript JSON
-        transcript_uri = status['TranscriptionJob']['Transcript']['TranscriptFileUri']
-        resp           = requests.get(transcript_uri)
-        text           = resp.json()['results']['transcripts'][0]['transcript']
-
-        # now feed that into your existing services *in memory*
-        text_lines     = text.splitlines()
-        eval_data      = analyze_interview_parallel(text_lines)
-        # or if you want the old response_eval:
-        # eval_data    = response_eval(text_lines, merge_job_description)
-
-        return jsonify({
-                'transcript': text,
-                'evaluation': eval_data
-            }), 200
+        return handle_success("Successfully updated the database")
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return handle_server_error(e)
