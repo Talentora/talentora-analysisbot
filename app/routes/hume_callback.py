@@ -5,7 +5,6 @@ from hume import HumeClient
 
 from app.configs.hume_config import HUME_API_KEY
 from app.controllers.hume_job_manager import JobManager
-from app.services.sentiment_analysis import EmotionAnalyzer
 from app.controllers.supabase_db import SupabaseDB
 from app.services.summarize import ai_summary
 from app.services.mmr.data_preprocessor import DataPreprocessor
