@@ -462,9 +462,8 @@ class DataPreprocessor:
         json_results['overall_score'] = overall_score
         
         # Update individual modality scores
-        for mod in ['face', 'prosody', 'language']:
-            if mod in json_results['averages']:
-                json_results['averages'][mod]['aggregate_score'] = svr_predictions.get(mod, None)
-        
+        for idx, mod in enumerate(['face','prosody','language']):
+            score = float(svr_predictions[0, idx])  # or svr_array[idx] if 1D
+            json_results['averages'][mod]['aggregate_score'] = score
         return json_results
     
