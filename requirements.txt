@@ -47,3 +47,5 @@ websockets
 colorama
 merge-ats-client
 bs4
+boto3
+botocore
