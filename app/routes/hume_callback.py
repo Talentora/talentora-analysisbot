@@ -64,7 +64,7 @@ class HumeCallbackHandler:
         prepared_input = self.mmr_preprocessor.prepare_single_prediction(self.mmr_preprocessor.get_model_input_dataframes())
         
         # Get predictions from individual SVR models and meta model        
-        overall_score, svr_predictions = self.mmr.predict(new_data=input)[0]
+        overall_score, svr_predictions = self.mmr.predict(new_data=prepared_input)[0]
         
         # feed predictions into json_resp to complete the final results
         final_results = self.mmr_preprocessor.update_prediction_results(json_resp, overall_score, svr_predictions)
