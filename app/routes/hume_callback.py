@@ -61,10 +61,10 @@ class HumeCallbackHandler:
         
         # Pre-process the Hume data, generate the aggregates & timelines, and prepare the dataframes for the SVR models
         json_resp = self.mmr_preprocessor.process_single_prediction_from_obj(predictions)
-        input = self.mmr_preprocessor.prepare_single_prediction(self.mmr_preprocessor.get_model_input_dataframes())
+        prepared_input = self.mmr_preprocessor.prepare_single_prediction(self.mmr_preprocessor.get_model_input_dataframes())
         
         # Get predictions from individual SVR models and meta model        
-        overall_score, svr_predictions = float(round(self.mmr.predict(new_data=input)[0], 2))
+        overall_score, svr_predictions = float(round(self.mmr.predict(new_data=prepared_input)[0], 2))
         
         # feed predictions into json_resp to complete the final results
         final_results = self.mmr_preprocessor.update_prediction_results(json_resp, overall_score, svr_predictions)
