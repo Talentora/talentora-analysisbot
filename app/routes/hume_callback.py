@@ -55,7 +55,7 @@ class HumeCallbackHandler:
         """Process emotion predictions from Hume."""
         #NOTE: This is where the MMR model is used to process the predictions
         print(f"[DEBUG] process_emotions called for job_id={job_id}")
-        predictions = self.job_manager.get_job_predictions(job_id)
+        predictions = self.job_manager.get_job_predictions(job_id) 
         if not predictions:
             raise ValueError(f"No predictions found for job {job_id}")
         print("[DEBUG] Predictions retrieved from Hume")

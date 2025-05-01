@@ -4,5 +4,5 @@
 /venv/
 # Exclude __pycache__ directories
 __pycache__/
-
+app/services/.DS_Store
 venv/
