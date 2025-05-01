@@ -46,3 +46,4 @@ openai
 websockets
 colorama
 merge-ats-client
+bs4
