@@ -182,7 +182,7 @@ class MultiModalRegressor:
             meta_features = new_data
             
         # Use the meta model to predict
-        return self.meta_model.predict(meta_features), meta_features
+        return float(round(self.meta_model.predict(meta_features), 2)), meta_features
 
     def evaluate(self, true_values, predictions):
         """
