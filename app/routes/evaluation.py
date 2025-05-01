@@ -1,11 +1,13 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin, CORS
 import requests
+import asyncio
 
 from app.configs.merge_config import MERGE_API_KEY, MERGE_ACCOUNT_TOKEN
 from app.controllers.supabase_db import SupabaseDB
 from app.controllers.merge import MergeAPIClient
 from app.services.score_calculation import response_eval
+from app.services.text_analysis import analyze_interview_parallel
 from app.services.sentiment import run_emotion_analysis
 from app.utils import handle_server_error
 
@@ -58,7 +60,13 @@ class WebhookHandler:
         )
 
         # run text evaluation
-        text_eval = response_eval(transcript_lines, desc)
+        transcript_str = "\n".join(transcript_lines)
+        analysis_result = asyncio.run(
+            analyze_interview_parallel(transcript_str)
+        )
+        
+        # serialize to JSON (or store the raw dict)
+        text_eval = analysis_result.model_dump_json()
 
         # store transcript_summary + text_eval back in your AI_summary table
         self.database.update_supabase_data(
