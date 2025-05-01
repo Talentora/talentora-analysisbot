@@ -38,6 +38,7 @@ def ai_summary(transcript_summary: str, text_eval: dict, job_description: str, e
     )
 
     response = openai.chat.completions.create(
+        temperature=0.0,
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are an experienced recruiter assessing a candidate."},
