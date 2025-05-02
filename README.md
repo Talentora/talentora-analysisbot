@@ -24,7 +24,6 @@ docker run -d -p 8000:8000 --name talentora talentora-analysisbot
 ```
 docker stop talentora
 ```
-5. meow
 
 ## Input
 
