@@ -14,6 +14,7 @@ def analysis_bot():
     database = SupabaseDB()
 
     try:
+        # Fetch data
         data                  = request.get_json()
         recording_id          = data['recording_id']
         application_id        = data['application_id']
@@ -33,12 +34,13 @@ def analysis_bot():
             transcript = json.dumps(json.load(f))
 
 
-        # analyze the interview
+        # Analyze the interview
         text_eval      = analyze_interview_parallel(transcript)
         summary        = "" #TODO: add summary
         emotional_eval = "" #TODO: add emotional eval
 
-        # update the database
+
+        # Update the database
         database.update_supabase_data(
             "AI_summary",
             {
