@@ -36,8 +36,8 @@ def analysis_bot():
 
         # Analyze the interview
         text_eval      = analyze_interview_parallel(transcript)
-        summary        = "" #TODO: add summary
-        emotional_eval = "" #TODO: add emotional eval
+        summary        = "summary" #TODO: add summary
+        emotional_eval = "emotional_eval" #TODO: add emotional eval
 
 
         # Update the database
