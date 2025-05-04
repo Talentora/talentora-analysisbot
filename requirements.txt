@@ -1,5 +1,5 @@
 aiofiles
-agents
+# agents
 annotated-types
 anyio
 certifi
@@ -22,7 +22,7 @@ pandas
 pdfplumber
 pillow
 pycparser
-pydantic
+pydantic==2.4.2
 pydantic_core
 pydub
 pyparsing
@@ -38,7 +38,7 @@ flask
 transformers
 flask_cors
 gunicorn
-tensorflow==1.15.2
+tensorflow==2.15.0
 torch
 sentence-transformers
 supabase

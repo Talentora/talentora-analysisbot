@@ -4,7 +4,7 @@ GREAT_INTERVIEW = {
     "transcript": """
 Interviewer: Hello! Thanks for joining us today. Could you start by introducing yourself and sharing a bit about your background?
 
-Candidate: Hi, thank you for having me! I'm Sarah Chen. I've been working as a frontend engineer for the past 7 years, most recently at TechCorp where I led the redesign of our customer dashboard using React, TypeScript, and GraphQL. Before that, I worked at StartupX where I built their initial product interface from scratch, focusing on performance optimization and accessibility. I've also dabbled in backend development, working with Node.js and Express. I've also contributed to several open-source projects, including a popular React library for state management. I've also been involved in the local tech community, organizing meetups and workshops to help others learn and grow in their careers.
+Candidate: Hi, thank you for having me! I'm Benjamin Button. I've been working as a frontend engineer for the past 7 years, most recently at TechCorp where I led the redesign of our customer dashboard using React, TypeScript, and GraphQL. Before that, I worked at StartupX where I built their initial product interface from scratch, focusing on performance optimization and accessibility. I've also dabbled in backend development, working with Node.js and Express. I've also contributed to several open-source projects, including a popular React library for state management. I've also been involved in the local tech community, organizing meetups and workshops to help others learn and grow in their careers.
 
 Interviewer: That's impressive background. Could you tell me about a challenging technical problem you've solved recently?
 
