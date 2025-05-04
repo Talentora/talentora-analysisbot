@@ -38,7 +38,7 @@ flask
 transformers
 flask_cors
 gunicorn
-tensorflow==2.15.0
+tensorflow==1.15.2
 torch
 sentence-transformers
 supabase
