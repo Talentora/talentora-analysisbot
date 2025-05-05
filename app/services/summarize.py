@@ -80,7 +80,7 @@ def summarize_interview_json(interview_json: Union[str, Dict[str, Any]]) -> Dict
                        with keys 'room_name', 'timestamp', and 'conversation'.
     
     Returns:
-        A dictionary containing the summary and metadata about the interview.
+        A dictionary with a score (0-100) and explanation evaluating the candidate.
     """
     # Parse JSON if a string is provided
     if isinstance(interview_json, str):
@@ -130,14 +130,15 @@ def summarize_interview_json(interview_json: Union[str, Dict[str, Any]]) -> Dict
     
     # Prepare the prompt for summarization
     prompt = (
-        "You are an assistant summarizing a job interview transcript. Below is the transcript of an interview.\n\n"
+        "You are an assistant evaluating a job interview transcript. Below is the transcript of an interview.\n\n"
         f"Transcript:\n{transcript}\n\n"
-        "Please provide a concise summary of the candidate's responses, highlighting their:"
+        "Please evaluate the candidate based on the interview transcript. Consider the following aspects:\n"
         "1. Technical knowledge and skills demonstrated\n"
         "2. Communication abilities\n"
         "3. Experience mentioned\n"
-        "4. Any notable strengths or weaknesses\n\n"
-        "Format the summary as a JSON object with the following structure:"
+        "4. Overall fit for a software development position\n\n"
+        "Provide a score from 0-100 representing how qualified the candidate appears to be based on the transcript.\n"
+        "Also provide a detailed explanation for your scoring, mentioning specific strengths and weaknesses observed."
     )
     
     try:
@@ -145,68 +146,36 @@ def summarize_interview_json(interview_json: Union[str, Dict[str, Any]]) -> Dict
             model="gpt-4o",
             temperature=0.0,
             messages=[
-                {"role": "system", "content": "You are an expert at summarizing job interviews."},
+                {"role": "system", "content": "You are an expert at evaluating job interview candidates."},
                 {"role": "user", "content": prompt}
             ],
             response_format={
                 "type": "json_schema",
                 "json_schema": {
-                    "name": "interview_summary_schema",
+                    "name": "interview_evaluation_schema",
                     "schema": {
                         "type": "object",
                         "properties": {
-                            "technical_knowledge": {
-                                "description": "Summary of technical knowledge demonstrated",
-                                "type": "string"
+                            "score": {
+                                "description": "A score from 0-100 indicating how qualified the candidate appears based on the interview",
+                                "type": "integer"
                             },
-                            "communication": {
-                                "description": "Assessment of communication skills",
-                                "type": "string"
-                            },
-                            "experience": {
-                                "description": "Summary of experience mentioned",
-                                "type": "string"
-                            },
-                            "strengths": {
-                                "description": "Notable strengths identified",
-                                "type": "array",
-                                "items": {"type": "string"}
-                            },
-                            "weaknesses": {
-                                "description": "Areas for improvement identified",
-                                "type": "array",
-                                "items": {"type": "string"}
-                            },
-                            "overall_impression": {
-                                "description": "Overall impression of the candidate",
+                            "explanation": {
+                                "description": "A detailed explanation for the score, mentioning specific strengths and weaknesses",
                                 "type": "string"
                             }
                         },
-                        "required": ["technical_knowledge", "communication", "experience", "strengths", "weaknesses", "overall_impression"]
+                        "required": ["score", "explanation"]
                     }
                 }
             }
         )
         
-        summary = json.loads(response.choices[0].message.content)
-        
-        # Add metadata to the result
-        result = {
-            "summary": summary,
-            "metadata": {
-                "room_name": interview_data.get("room_name", ""),
-                "timestamp": interview_data.get("timestamp", ""),
-                "interviewer": interviewer,
-                "candidate": candidate,
-                "transcript_length": len(transcript),
-                "message_count": len(conversation)
-            }
-        }
-        
-        return result
+        # Return the raw JSON response
+        return json.loads(response.choices[0].message.content)
     
     except Exception as e:
-        return {"error": f"Error generating summary: {str(e)}"}
+        return {"error": f"Error generating evaluation: {str(e)}"}
 
 '''
 Will implement in the future

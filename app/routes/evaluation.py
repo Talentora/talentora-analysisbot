@@ -6,7 +6,7 @@ from app.controllers.aws_s3 import fetch_from_s3
 from app.controllers.supabase_db import SupabaseDB
 from app.services.text_analysis import analyze_interview_parallel
 from app.utils.request_handler import handle_success, handle_server_error
-
+from app.services.summarize import summarize_interview_json
 
 evaluation_bp = Blueprint('evaluation', __name__)
 
@@ -39,7 +39,7 @@ def analysis_bot():
 
         # Analyze the interview
         text_eval      = analyze_interview_parallel(transcript)
-        summary        = "summary" #TODO: add summary
+        summary        = summarize_interview_json(transcript)
         emotional_eval = "emotional_eval" #TODO: add emotional eval
 
 
