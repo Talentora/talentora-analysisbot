@@ -22,7 +22,7 @@ pandas
 pdfplumber
 pillow
 pycparser
-pydantic==2.6.0
+pydantic
 pydantic_core
 pydub
 pyparsing
