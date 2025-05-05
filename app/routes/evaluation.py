@@ -6,10 +6,12 @@ from app.controllers.aws_s3 import fetch_from_s3
 from app.controllers.supabase_db import SupabaseDB
 from app.services.text_analysis import analyze_interview_parallel
 from app.utils.request_handler import handle_success, handle_server_error
-from app.routes import bp
+
+
+evaluation_bp = Blueprint('evaluation', __name__)
 
 # New endpoint to handle notifications from the analysis bot
-@bp.route('/analysis-bot', methods=['POST'])
+@evaluation_bp.route('/analysis-bot', methods=['POST'])
 @cross_origin()
 def analysis_bot():
     database = SupabaseDB()
