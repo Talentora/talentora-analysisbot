@@ -9,7 +9,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
 import joblib
 from .data_preprocessor import DataPreprocessor
-from .data_loader import load_json
+import json
 import logging
 import os
 from pathlib import Path
@@ -238,7 +238,9 @@ if __name__ == "__main__":
         json_path = "svr_model/big_hume_55.json"
         if not os.path.exists(json_path):
             raise FileNotFoundError(f"JSON file not found: {json_path}")
-        json_data = load_json(json_path)
+        
+        with open(json_path, 'r') as f:
+            json_data = json.load(f)
         
         # Process data with validation
         job = DataPreprocessor()
@@ -315,7 +317,8 @@ if __name__ == "__main__":
             if not os.path.exists(test_json_path):
                 raise FileNotFoundError(f"Test JSON file not found: {test_json_path}")
             
-            test_json_data = load_json(test_json_path)
+            with open(test_json_path, 'r') as f:
+                test_json_data = json.load(f)
             job = DataPreprocessor()
             
             # Process the test data
