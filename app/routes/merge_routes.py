@@ -58,7 +58,8 @@ def validate_webhook(f):
 def new_job():
     logging.info("New job webhook received")
     try:
-        payload = request.get_json(force=True)
+        payload = request.get_json()
+        logging.info(f"Payload: {payload}")
         handler = MergeHandler()
         handler.handle_new_job(payload)
         

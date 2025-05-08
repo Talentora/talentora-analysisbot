@@ -1,4 +1,4 @@
-import os
+import logging
 import tempfile
 from flask import json
 import openai
@@ -275,13 +275,16 @@ class MergeHandler:
 
 
         return True
-    
+
+
     def handle_new_job(self, data: dict) -> None:
         """
         Handles a new job event from the Merge API.
 
         :param payload: The payload containing job data.
         """
+        logging.info("Handling new job")
+        logging.info(f"Data: {data}")
         job_desc = data.get("description")   
         
         job_config_str = self.generate_ai_job_config(job_desc)
@@ -296,7 +299,8 @@ class MergeHandler:
             raise ValueError("Failed to insert new job")
         
         return True
-    
+
+
     def handle_new_application(self, payload: dict) -> None:
         """
         Handles a new application event from the Merge API.
