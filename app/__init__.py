@@ -1,9 +1,5 @@
 from flask import Flask
 from flask_cors import CORS
-from app.routes.resume_routes import resume_bp  # Import the resume routes
-from app.routes.health import health_bp  # Import the health routes
-from app.routes.evaluation import bp as evaluation_bp
-from app.routes.hume_callback import bp_hume as hume_callback_bp
 from app.routes import register_blueprints
 
 def create_app(Test=False) -> Flask:
