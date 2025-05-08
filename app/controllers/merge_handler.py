@@ -285,6 +285,7 @@ class MergeHandler:
         """
         logging.info("Handling new job")
         logging.info(f"Data: {data}")
+        print(f"Data: {data}")
         job_desc = data.get("description")   
         
         job_config_str = self.generate_ai_job_config(job_desc)
