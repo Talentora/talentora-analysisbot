@@ -42,6 +42,7 @@ def new_job():
         print(f"Error in merge_webhook - new_job: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+
 @merge_bp.route("/merge/new-application", methods=["POST"])
 def new_application():
     sig = request.headers.get("X-Merge-Webhook-Signature", "")
