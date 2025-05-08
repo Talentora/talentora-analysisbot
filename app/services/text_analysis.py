@@ -5,10 +5,9 @@ import openai
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import app.configs.openai_config as openai_config
 
-load_dotenv()
-OPENAI_ENV_KEY = os.getenv("OPENAI_ENV_KEY")
-openai.api_key = OPENAI_ENV_KEY
+openai.api_key = openai_config.OPENAI_API_KEY
 
 # Data Models
 class CriteriaScore(BaseModel):
