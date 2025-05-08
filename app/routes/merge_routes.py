@@ -22,7 +22,7 @@ def verify_signature(raw_body : bytes, webhook_signature : str):
 
 
 
-@merge_bp.route("/merge/new-job", methods=["POST"])
+@merge_bp.route("/new-job", methods=["POST"])
 def new_job():
     sig = request.headers.get("X-Merge-Webhook-Signature", "")
     raw = request.get_data() # returns bytes, no need to decode
@@ -43,7 +43,7 @@ def new_job():
         return jsonify({"error": str(e)}), 500
 
 
-@merge_bp.route("/merge/new-application", methods=["POST"])
+@merge_bp.route("/new-application", methods=["POST"])
 def new_application():
     sig = request.headers.get("X-Merge-Webhook-Signature", "")
     raw = request.get_data()  # returns bytes
