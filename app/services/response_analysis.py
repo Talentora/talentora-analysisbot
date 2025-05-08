@@ -65,6 +65,7 @@ def evaluate_responses(text: str, job_description: str) -> str:
 
     # Define the expected response structure using JSON schema
     response = openai.chat.completions.create(
+        temperature=0.0,
         model="gpt-4o-mini",  # Using GPT-4 mini model for evaluation
         messages=[
             # Set the AI's role as a recruiter

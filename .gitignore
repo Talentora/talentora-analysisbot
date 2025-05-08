@@ -5,5 +5,16 @@
 /.venv/
 # Exclude __pycache__ directories
 __pycache__/
-
+app/services/.DS_Store
 venv/
+
+# Exclude tmp directory
+tmp/
+
+# Exclude ds_store files
+.DS_Store
+**/.DS_Store
+
+# Exclude .idea directory
+.idea/
+

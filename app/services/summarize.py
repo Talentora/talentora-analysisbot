@@ -1,5 +1,7 @@
 import openai
 from app.test.lexical_feature import total_speech
+import json
+from typing import Dict, List, Any, Union
 
 def ai_summary(transcript_summary: str, text_eval: dict, job_description: str, emotion_eval_result: dict) -> dict:
     """
@@ -38,6 +40,7 @@ def ai_summary(transcript_summary: str, text_eval: dict, job_description: str, e
     )
 
     response = openai.chat.completions.create(
+        temperature=0.0,
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are an experienced recruiter assessing a candidate."},
@@ -67,6 +70,112 @@ def ai_summary(transcript_summary: str, text_eval: dict, job_description: str, e
     )
     
     return response.choices[0].message.content
+
+def summarize_interview_json(interview_json: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Summarize an interview transcript from a JSON input.
+    
+    Args:
+        interview_json: Either a JSON string or a dictionary containing the interview data
+                       with keys 'room_name', 'timestamp', and 'conversation'.
+    
+    Returns:
+        A dictionary with a score (0-100) and explanation evaluating the candidate.
+    """
+    # Parse JSON if a string is provided
+    if isinstance(interview_json, str):
+        try:
+            interview_data = json.loads(interview_json)
+        except json.JSONDecodeError:
+            return {"error": "Invalid JSON format"}
+    else:
+        interview_data = interview_json
+    
+    # Extract conversation from the interview data
+    conversation = interview_data.get("conversation", [])
+    if not conversation:
+        return {"error": "No conversation found in the interview data"}
+    
+    # Format the conversation into a readable transcript
+    transcript = ""
+    speakers = set()
+    
+    for message in conversation:
+        for speaker, text in message.items():
+            speakers.add(speaker)
+            transcript += f"{speaker}: {text}\n\n"
+    
+    # Identify the interviewer and candidate
+    # Assumption: The first speaker is the interviewer, or a speaker named with common interviewer patterns
+    all_speakers = list(speakers)
+    interviewer = None
+    candidate = None
+    
+    interviewer_patterns = ["interviewer", "recruiter", "hr", "hiring"]
+    
+    for speaker in all_speakers:
+        lower_speaker = speaker.lower()
+        if any(pattern in lower_speaker for pattern in interviewer_patterns):
+            interviewer = speaker
+            break
+    
+    # If no interviewer pattern found, assume the first speaker is the interviewer
+    if not interviewer and all_speakers:
+        interviewer = all_speakers[0]
+    
+    # Assume the candidate is any speaker that's not the interviewer
+    candidates = [s for s in all_speakers if s != interviewer]
+    if candidates:
+        candidate = candidates[0]  # Just take the first non-interviewer as the candidate
+    
+    # Prepare the prompt for summarization
+    prompt = (
+        "You are an assistant evaluating a job interview transcript. Below is the transcript of an interview.\n\n"
+        f"Transcript:\n{transcript}\n\n"
+        "Please evaluate the candidate based on the interview transcript. Consider the following aspects:\n"
+        "1. Technical knowledge and skills demonstrated\n"
+        "2. Communication abilities\n"
+        "3. Experience mentioned\n"
+        "4. Overall fit for a software development position\n\n"
+        "Provide a score from 0-100 representing how qualified the candidate appears to be based on the transcript.\n"
+        "Also provide a detailed explanation for your scoring, mentioning specific strengths and weaknesses observed."
+    )
+    
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4o",
+            temperature=0.0,
+            messages=[
+                {"role": "system", "content": "You are an expert at evaluating job interview candidates."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "interview_evaluation_schema",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "score": {
+                                "description": "A score from 0-100 indicating how qualified the candidate appears based on the interview",
+                                "type": "integer"
+                            },
+                            "explanation": {
+                                "description": "A detailed explanation for the score, mentioning specific strengths and weaknesses",
+                                "type": "string"
+                            }
+                        },
+                        "required": ["score", "explanation"]
+                    }
+                }
+            }
+        )
+        
+        # Return the raw JSON response
+        return json.loads(response.choices[0].message.content)
+    
+    except Exception as e:
+        return {"error": f"Error generating evaluation: {str(e)}"}
 
 '''
 Will implement in the future

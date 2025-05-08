@@ -1,4 +1,5 @@
 aiofiles
+# agents
 annotated-types
 anyio
 certifi
@@ -10,7 +11,7 @@ fonttools
 h11
 httpcore
 httpx
-hume
+hume==0.8.3
 idna
 kiwisolver
 matplotlib
@@ -37,6 +38,7 @@ flask
 transformers
 flask_cors
 gunicorn
+tensorflow==2.15.0
 torch
 sentence-transformers
 supabase
@@ -46,3 +48,6 @@ openai
 websockets
 colorama
 merge-ats-client
+bs4
+boto3
+botocore
