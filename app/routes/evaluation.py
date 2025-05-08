@@ -7,6 +7,8 @@ from app.controllers.supabase_db import SupabaseDB
 from app.services.text_analysis import analyze_interview_parallel
 from app.utils.request_handler import handle_success, handle_server_error
 from app.services.summarize import summarize_interview_json
+import os
+import logging
 
 evaluation_bp = Blueprint('evaluation', __name__)
 
@@ -15,6 +17,10 @@ evaluation_bp = Blueprint('evaluation', __name__)
 @cross_origin()
 def analysis_bot():
     database = SupabaseDB()
+    logger = logging.getLogger(__name__)
+    logger.info("Starting analysis bot")
+    logger.info(f"Request: {request.get_json()}")
+
 
     try:
         # Fetch data
@@ -56,6 +62,11 @@ def analysis_bot():
             },
             ['application_id', application_id]
         )
+
+
+        # delete the tmp files
+        os.remove(local_path)
+        os.remove(transcript_local_path)
 
         return handle_success("Successfully updated the database")
     except Exception as e:
