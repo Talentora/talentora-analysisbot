@@ -273,7 +273,10 @@ class SupabaseDB:
             self.client.table("jobs").insert({
                 "job_resume_config": job_config,
                 "merge_id": payload.get("data").get("id"),
-                "company_id": self.get_company_id(payload.get("data").get("linked_account_id"))
+                "company_id": self.get_company_id(payload.get("data").get("linked_account_id")),
+                "description": payload.get("data").get("description"),
+                "name": payload.get("data").get("name"),
+                "created_at": payload.get("data").get("created_at")
             }).execute()
         except Exception as e:
             print(f"{Fore.RED}✗ Error inserting new job: {str(e)}{Style.RESET_ALL}")

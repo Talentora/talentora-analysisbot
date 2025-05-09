@@ -59,8 +59,10 @@ def new_job():
     logging.info("New job webhook received")
     try:
         payload = request.get_json()
-        logging.info(f"Payload: {payload}")
         handler = MergeHandler()
+
+        logging.info(f"Payload: {payload}")
+
         handler.handle_new_job(payload)
         
         logging.info("New job processed successfully")
@@ -77,6 +79,8 @@ def new_application():
     try:
         payload = request.get_json(force=True)
         handler = MergeHandler()
+
+        logging.info(f"Payload: {payload}")
 
         if not handler.handle_new_application(payload):
             logging.error("Failed to process application")
