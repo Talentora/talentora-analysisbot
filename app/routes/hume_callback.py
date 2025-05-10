@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin, CORS
 import json
@@ -9,6 +11,9 @@ from app.controllers.supabase_db import SupabaseDB
 from app.services.summarize import ai_summary
 from app.services.mmr.data_preprocessor import DataPreprocessor
 from app.services.mmr.multi_modal_regressor import MultiModalRegressor
+
+BASE_DIR = Path(__file__).resolve().parent.parent  # Gets the app directory
+MODEL_PATH = os.path.join(BASE_DIR, "services", "mmr", "mmr_model.pkl")
 class HumeCallbackHandler:
     """Handles processing of Hume API callbacks and data management."""
     
@@ -19,7 +24,7 @@ class HumeCallbackHandler:
         # self.emotion_analyzer = EmotionAnalyzer(HUME_API_KEY)
         self.database = SupabaseDB()
         self.mmr_preprocessor = DataPreprocessor()
-        self.mmr = MultiModalRegressor.load_model("app/services/mmr/mmr_model.pkl")
+        self.mmr = MultiModalRegressor.load_model(MODEL_PATH)
 
     
     def validate_request(self, data, recording_id):
