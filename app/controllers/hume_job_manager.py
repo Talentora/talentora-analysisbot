@@ -77,7 +77,7 @@ class JobManager:
             response = self.client.expression_measurement.batch.start_inference_job(**job_payload)
             print(f"{Fore.GREEN}Job started successfully{Style.RESET_ALL}")
             # print(response)
-            return response
+            return response['job_id']
         except Exception as e:
             print(f"{Fore.RED}Error starting job: {e}{Style.RESET_ALL}")
             return None
@@ -147,7 +147,7 @@ class JobManager:
             else:
                 elapsed_time = (datetime.now() - start_time)
                 print(f"{Fore.YELLOW}Status: {status}, Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}, Elapsed Time: {elapsed_time}{Style.RESET_ALL}")
-                await asyncio.sleep(10)
+                await asyncio.sleep(30)
 
     async def get_job_predictions(self, job_id: str):
         """

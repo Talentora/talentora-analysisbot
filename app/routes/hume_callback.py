@@ -15,13 +15,13 @@ class HumeCallbackHandler:
     def __init__(self):
         """Initialize components needed for processing Hume callbacks."""
         self.client = HumeClient(api_key=HUME_API_KEY)
-        self.job_manager = JobManager(self.client)
+        self. job_manager = JobManager(self.client)
         # self.emotion_analyzer = EmotionAnalyzer(HUME_API_KEY)
         self.database = SupabaseDB()
         self.mmr_preprocessor = DataPreprocessor()
-        self.mmr = MultiModalRegressor().load_model("app/services/mmr/mmr_model.pkl")
-        # self.mmr = None # TODO: load the model
+        self.mmr = MultiModalRegressor.load_model("app/services/mmr/mmr_model.pkl")
 
+    
     def validate_request(self, data, recording_id):
         """Validate incoming request data."""
         print("[DEBUG] validate_request called")
@@ -32,25 +32,6 @@ class HumeCallbackHandler:
             raise ValueError('recording_id not provided in query parameters')
         return job_id
 
-    def get_existing_data(self, recording_id):
-        """Retrieve existing data from database."""
-        print(f"[DEBUG] get_existing_data called for recording_id={recording_id}")
-        transcript_data = self.database.get_supabase_data(
-            "AI_summary",
-            "transcript_summary",
-            ["recording_id", recording_id]
-        ).data[0]['transcript_summary']
-        print(f"[DEBUG] transcript_data length: {len(transcript_data)}")
-
-        text_eval_data = self.database.get_supabase_data(
-            "AI_summary",
-            "text_eval",
-            ["recording_id", recording_id]
-        ).data[0]['text_eval']
-        print(f"[DEBUG] text_eval_data: {text_eval_data}")
-
-        return transcript_data, text_eval_data
-
     def process_emotions(self, job_id):
         """Process emotion predictions from Hume."""
         #NOTE: This is where the MMR model is used to process the predictions
@@ -59,6 +40,7 @@ class HumeCallbackHandler:
         if not predictions:
             raise ValueError(f"No predictions found for job {job_id}")
         print("[DEBUG] Predictions retrieved from Hume")
+        
         
         # Pre-process the Hume data, generate the aggregates & timelines, and prepare the dataframes for the SVR models
         json_resp = self.mmr_preprocessor.process_single_prediction_from_obj(predictions)
@@ -72,55 +54,24 @@ class HumeCallbackHandler:
         
         return final_results
 
-    def generate_summary(self, transcript_summary, text_eval, job_description, emotion_results):
-        """Generate overall summary from all available data."""
-        print("[DEBUG] generate_summary called")
-        return json.loads(ai_summary(
-            transcript_summary,
-            text_eval,
-            job_description,
-            emotion_results
-        ))
 
-    def update_database(self, recording_id, emotion_results, summary):
-        """Update database with processed results."""
-        print("[DEBUG] update_database called")
-        update_data = {
-            "emotion_eval": emotion_results,
-            "overall_summary": summary
-        }
-        self.database.update_supabase_data(
-            "AI_summary",
-            update_data,
-            ["recording_id", recording_id]
-        )
-        print("[DEBUG] Database updated with new emotion & summary data")
-
-    def process_callback(self, data, recording_id, job_description):
+    async def process_callback(self, recording_url):
         """Process the complete Hume callback workflow."""
         print("[DEBUG] process_callback called")
-        # Validate request
-        job_id = self.validate_request(data, recording_id)
-        print(f"[DEBUG] job_id={job_id}")
-
-        # Get existing data
-        transcript_summary, text_eval = self.get_existing_data(recording_id)
-
-        # Process emotions
-        emotion_results = self.process_emotions(job_id)
+        #Prep, upload and wait for Hume job to complete
+        models = {
+            "face":"",
+            "prosody": {"granularity": "conversational_turn"},
+            "language": {"granularity": "conversational_turn"},
+        }
+        
+        hume_job_id = self.job_manager.start_job(urls = [recording_url], models = models)
+        await self.job_manager.wait_for_job_completion(hume_job_id)
+        # Process emotions from the Hume job
+        emotion_results = self.process_emotions(hume_job_id)
         print(f"[DEBUG] emotion_results: {emotion_results}")
+        return emotion_results
 
-        # Generate summary
-        summary = self.generate_summary(
-            transcript_summary,
-            text_eval,
-            job_description,
-            emotion_results
-        )
-        print(f"[DEBUG] Final summary: {summary}")
-
-        # Update database
-        self.update_database(recording_id, emotion_results, summary)
 
 # Blueprint setup
 bp_hume = Blueprint('hume_callback', __name__)
