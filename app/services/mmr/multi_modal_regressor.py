@@ -8,14 +8,14 @@ from sklearn.model_selection import GridSearchCV, KFold, train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
 import joblib
-from .data_preprocessor import DataPreprocessor
+from data_preprocessor import DataPreprocessor
 import json
 import logging
 import os
 from pathlib import Path
 
 class MultiModalRegressor:
-    def __init__(self, data, target, modalities=['facial', 'prosody', 'language'], 
+    def __init__(self, data, target, modalities=['face', 'prosody', 'language'], 
                  svr_params=None, meta_params=None, num_top_features=41, k_fold_splits = 6):
         """
         Parameters:
@@ -235,7 +235,7 @@ if __name__ == "__main__":
         logger.info("Starting training process")
         
         # Load and validate JSON data
-        json_path = "svr_model/big_hume_55.json"
+        json_path = "app/services/mmr/training_data.json"
         if not os.path.exists(json_path):
             raise FileNotFoundError(f"JSON file not found: {json_path}")
         
