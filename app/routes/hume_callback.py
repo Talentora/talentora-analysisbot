@@ -19,8 +19,8 @@ class HumeCallbackHandler:
         # self.emotion_analyzer = EmotionAnalyzer(HUME_API_KEY)
         self.database = SupabaseDB()
         self.mmr_preprocessor = DataPreprocessor()
-        # self.mmr = MultiModalRegressor().load_model("app/services/mmr/mmr_model.pkl")
-        self.mmr = None # TODO: load the model
+        self.mmr = MultiModalRegressor().load_model("app/services/mmr/mmr_model.pkl")
+        # self.mmr = None # TODO: load the model
 
     def validate_request(self, data, recording_id):
         """Validate incoming request data."""
