@@ -8,11 +8,12 @@ from sklearn.model_selection import GridSearchCV, KFold, train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
 import joblib
-from data_preprocessor import DataPreprocessor
-import json
-import logging
+import sys
 import os
 from pathlib import Path
+
+# Add the parent directory to sys.path to allow imports from app
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 
 class MultiModalRegressor:
     def __init__(self, data, target, modalities=['face', 'prosody', 'language'], 
@@ -164,25 +165,38 @@ class MultiModalRegressor:
         """
         Predicts target values for new data.
         For each modality, the new data is reduced to the selected features before prediction.
-        Returns the predicted target value and the meta features used for prediction.
+        Returns the predicted target value and individual modality predictions as a dictionary.
         """
         if isinstance(new_data, dict):
             # Handle dictionary input (original case)
-            modality_preds = []
+            modality_preds = {}
+            modality_arrays = []
+            
             for mod in self.modalities:
                 X_new = new_data[mod]
                 # Ensure the new data has the same columns as selected during training
                 if isinstance(X_new, pd.DataFrame) and mod in self.selected_features:
                     X_new = X_new[self.selected_features[mod]]
+                
+                # Get prediction for this modality
                 pred = self.svr_models[mod].predict(X_new)
-                modality_preds.append(pred)
-            meta_features = np.column_stack(modality_preds)
+                # Store the prediction in the dictionary with the modality as key
+                modality_preds[mod] = float(round(pred[0], 2))
+                # Keep track of the arrays for meta_features
+                modality_arrays.append(pred)
+            
+            # Stack the predictions for meta model
+            meta_features = np.column_stack(modality_arrays)
         else:
             # Handle array input (from process_prediction)
             meta_features = new_data
+            # In this case, we don't have individual modality predictions
+            modality_preds = {}
             
         # Use the meta model to predict
-        return float(round(self.meta_model.predict(meta_features), 2)), meta_features
+        overall_score = float(round(self.meta_model.predict(meta_features)[0], 2))
+        
+        return overall_score, modality_preds
 
     def evaluate(self, true_values, predictions):
         """
@@ -221,133 +235,3 @@ class MultiModalRegressor:
         model_instance = joblib.load(file_path)
         print(f"Model loaded from {file_path}")
         return model_instance
-
-
-if __name__ == "__main__":
-    """This script is used to train the MultiModalRegressor model.
-    It loads the JSON data, processes the training predictions, and saves the model.
-    It also tests loading an saved mmr Model and using it to predict a single video."""
-    try:
-        # Add logging configuration
-        logging.basicConfig(level=logging.INFO)
-        logger = logging.getLogger(__name__)
-        
-        logger.info("Starting training process")
-        
-        # Load and validate JSON data
-        json_path = "app/services/mmr/training_data.json"
-        if not os.path.exists(json_path):
-            raise FileNotFoundError(f"JSON file not found: {json_path}")
-        
-        with open(json_path, 'r') as f:
-            json_data = json.load(f)
-        
-        # Process data with validation
-        job = DataPreprocessor()
-        try:
-            df_face, df_pros, df_lang = job.process_training_predictions(json_data)
-        except Exception as e:
-            logger.error(f"Error processing training predictions: {str(e)}")
-            raise
-        
-        if df_face.empty or df_pros.empty or df_lang.empty:
-            raise ValueError("One or more DataFrames are empty after processing")
-            
-        # Prepare model input
-        model_data, target = job.prepare_model_input(df_face, df_pros, df_lang)
-        modalities = ['face', 'prosody', 'language']
-        
-        # Split data
-        indices = np.arange(len(target))
-        train_idx, test_idx = train_test_split(indices, test_size=0.3, random_state=42)
-        
-        # Create training and test sets
-        train_data = {mod: model_data[mod].iloc[train_idx] for mod in modalities}
-        test_data = {mod: model_data[mod].iloc[test_idx] for mod in modalities}
-        train_target = target[train_idx]
-        test_target = target[test_idx]
-        
-        # Train model
-        logger.info("Initializing and training model")
-        mmr = MultiModalRegressor(train_data, train_target, modalities, k_fold_splits=6)
-        mmr.select_features_ridge()
-        mmr.build_svr_pipeline()
-        mmr.grid_search_svr()
-        mmr.generate_oof_predictions()
-        mmr.train_meta_model()
-        mmr.grid_search_meta()
-        
-        # Evaluate
-        logger.info("Evaluating model performance")
-        meta_features_test = np.column_stack([
-            mmr.svr_models[mod].predict(test_data[mod][mmr.selected_features[mod]])
-            for mod in modalities
-        ])
-        test_predictions = mmr.meta_model.predict(meta_features_test)
-        mse, mae, r2 = mmr.evaluate(test_target, test_predictions)
-        
-        # Save results
-        logger.info("Saving model and results")
-        mmr.save_model("mmr_model.pkl")
-        
-        # Visualize
-        plt.figure(figsize=(8, 8))
-        plt.scatter(test_target, test_predictions, alpha=0.7, label='Predictions')
-        min_val = min(test_target.min(), test_predictions.min())
-        max_val = max(test_target.max(), test_predictions.max())
-        plt.plot([min_val, max_val], [min_val, max_val], 'r--', lw=2, label='Ideal')
-        plt.xlabel('True Target Values')
-        plt.ylabel('Predicted Values')
-        plt.title('Test Data: True vs. Predicted Values')
-        plt.legend()
-        plt.grid(True)
-        plt.savefig('model_performance.png')
-        plt.close()
-        
-        logger.info("Training process completed successfully")
-        
-        # Test the loaded model on test_pred.json
-        logger.info("Testing loaded model on test_pred.json")
-        try:
-            # Load the saved model
-            loaded_mmr = MultiModalRegressor.load_model("mmr_model.pkl")
-            
-            # Load and process test_pred.json
-            test_json_path = "test_pred.json"
-            if not os.path.exists(test_json_path):
-                raise FileNotFoundError(f"Test JSON file not found: {test_json_path}")
-            
-            with open(test_json_path, 'r') as f:
-                test_json_data = json.load(f)
-            job = DataPreprocessor()
-            
-            # Process the test data
-            json_resp = job.process_single_prediction_from_obj(test_json_data)
-            
-            test_data = job.prepare_single_prediction(job.model_input_dataframes)
-            
-            # Get predictions from individual SVR models
-            svr_predictions = job.get_svr_predictions(loaded_mmr, test_data)
-            
-            # Get overall prediction
-            overall_score = float(round(loaded_mmr.predict(new_data=test_data)[0], 2))
-            
-            # Update the JSON results with predictions
-            final_results = job.update_prediction_results(json_resp, overall_score, svr_predictions)
-            
-            # Print results
-            logger.info("\nPrediction Results:")
-            logger.info(f"Overall Score: {overall_score}")
-            logger.info("\nIndividual Modality Scores:")
-            for mod, score in svr_predictions.items():
-                logger.info(f"{mod}: {score}")
-            
-            print("Printing final JSON results")
-            print(final_results)
-        except Exception as e:
-            logger.error(f"Error during testing: {str(e)}")
-            raise
-        
-    except Exception as e:
-        logger.error(f"Error during training process: {str(e)}")
-        raise

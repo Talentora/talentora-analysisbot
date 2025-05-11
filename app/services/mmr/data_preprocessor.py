@@ -170,7 +170,7 @@ class DataPreprocessor:
         prosody_data_emotions = defaultdict(list) #each of these will store a list of emotion scores for each emotion, used to calculate aggregates
         
         # Get the first prediction from the results
-        video = hume_json['results']['predictions'][0]
+        video = hume_json[0]['results']['predictions'][0]
         file_name = video.get("file", "unknown_file")
         
         # Process face predictions
@@ -301,8 +301,8 @@ class DataPreprocessor:
                 'overall_score': None,
                 'top_emotions': top_3_combined_emotions
         }
-        
-    def load__all_labels(self):
+    
+    def load_labels_supabase(self):
         """
         Fetch all labeled CSV files from Supabase and return it as a DataFrame.
         """
@@ -393,8 +393,8 @@ class DataPreprocessor:
         Returns a dictionary of DataFrames and the target array.
         """
         # Load labels
-        labels_df = self.load__all_labels()
-        
+        labels_df = self.load_labels_local("/Users/abdelazimlokma/Desktop/Desktop/CS Projects/Talentora/talentora-analysisbot/app/services/mmr/turker_scores_full_interview.csv")
+    
         # Merge with labels
         face_merged, prosody_merged, language_merged, target = self.merge_data_with_labels(
             face_df, prosody_df, language_df, labels_df
@@ -462,8 +462,59 @@ class DataPreprocessor:
         json_results['overall_score'] = overall_score
         
         # Update individual modality scores
-        for idx, mod in enumerate(['face','prosody','language']):
-            score = float(svr_predictions[0, idx])  # or svr_array[idx] if 1D
-            json_results['averages'][mod]['aggregate_score'] = score
+        for mod, score in svr_predictions.items():
+            if mod in json_results['averages']:
+                json_results['averages'][mod]['aggregate_score'] = score
+        
         return json_results
+    
+    def load_labels_local(self, file_path):
+        """
+        Load labeled data from a local CSV file.
+        
+        Args:
+            file_path (str): Path to the local CSV file containing labeled data
+            
+        Returns:
+            pd.DataFrame: DataFrame with labels, indexed by participant_id
+        """
+        print("Loading labels from local file...")
+        
+        try:
+            # Check if file exists
+            if not os.path.exists(file_path):
+                print(f"File not found: {file_path}")
+                return pd.DataFrame()
+            
+            # Read the CSV file
+            df_labels = pd.read_csv(file_path)
+            print(f"Loaded CSV with {len(df_labels)} rows")
+            
+            # Only keep rows where Worker equals "AGGR"
+            if 'Worker' in df_labels.columns:
+                df_labels = df_labels[df_labels['Worker'].str.upper() == "AGGR"].copy()
+                print(f"Filtered to {len(df_labels)} aggregated rows")
+
+            # Create a new column "participant_id" to match the JSON (e.g., "PP1" -> "pp1")
+            if 'Participant' in df_labels.columns:
+                df_labels['participant_id'] = df_labels['Participant'].str.lower()
+            else:
+                print("Warning: 'Participant' column not found, assuming participant_id exists")
+            
+            # Keep only the participant ID and the RecommendHiring Score
+            if 'RecommendHiring' in df_labels.columns and 'participant_id' in df_labels.columns:
+                df_labels = df_labels[['participant_id', 'RecommendHiring']]
+            else:
+                print("Warning: Required columns not found. Available columns:", df_labels.columns)
+                return pd.DataFrame()
+            
+            # Set participant_id as the index
+            df_labels.set_index('participant_id', inplace=True)
+            
+            print("Labels loaded successfully")
+            return df_labels
+        
+        except Exception as e:
+            print(f"Error loading labeled scores from local file: {str(e)}")
+            return pd.DataFrame()
     
