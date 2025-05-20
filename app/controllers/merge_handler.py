@@ -294,7 +294,7 @@ class MergeHandler:
         if not self.validate_job_config(job_config):
             raise ValueError("Invalid job config")
         
-        if not self.supabase.insert_new_job(job_config, job_desc):
+        if not self.supabase.insert_new_job(job_config, data):
             raise ValueError("Failed to insert new job")
         
         return True
