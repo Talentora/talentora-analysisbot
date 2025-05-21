@@ -267,13 +267,13 @@ class SupabaseDB:
             print(f"{Fore.RED}✗ Error fetching job ID: {str(e)}{Style.RESET_ALL}")
             raise e
         
-    def insert_new_job(self, job_config: dict, payload: dict) -> None:
+    def insert_new_job(self, job_resume_config: dict, payload: dict) -> None:
         """Save job configuration to database"""
         try:
             self.client.table("jobs").insert({
-                "job_resume_config": job_config,
+                "job_resume_config": job_resume_config,
                 "merge_id": payload.get("data").get("id"),
-                "company_id": self.get_company_id(payload.get("data").get("linked_account").get("id")),
+                "company_id": self.get_company_id(payload.get("linked_account").get("id")),
                 "description": payload.get("data").get("description"),
                 "name": payload.get("data").get("name"),
                 "created_at": payload.get("data").get("created_at")

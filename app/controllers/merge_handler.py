@@ -291,8 +291,9 @@ class MergeHandler:
         #convert string resp to dict for upload
         job_config = json.loads(job_config_str)
         
-        if not self.validate_job_config(job_config):
-            raise ValueError("Invalid job config")
+        while not self.validate_job_config(job_config):
+            job_config_str = self.generate_ai_job_config(job_desc)
+            job_config = json.loads(job_config_str)
         
         if not self.supabase.insert_new_job(job_config, data):
             raise ValueError("Failed to insert new job")
