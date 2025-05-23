@@ -63,7 +63,9 @@ def new_job():
 
         logging.info(f"Payload: {payload}")
 
-        handler.handle_new_job(payload)
+        if not handler.handle_new_job(payload):
+            logging.error("Failed to process new job")
+            return jsonify({"error": "Failed to process new job"}), 500
         
         logging.info("New job processed successfully")
         return jsonify({"message": "New job created successfully"}), 200
