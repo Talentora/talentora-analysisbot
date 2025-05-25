@@ -310,10 +310,11 @@ class MergeHandler:
             # if not all(payload.get(field) for field in ["job", "candidate", "id"]):
             #     raise ValueError("Missing required fields in payload")
                 
-            merge_job_id = payload["job"]
-            merge_candidate_id = payload["candidate"]
-            merge_application_id = payload["id"]
-            merge_linked_account_id = payload["linked_account"]["id"]
+            data = payload["data"]
+            merge_job_id = data["job"]
+            merge_candidate_id = data["candidate"]
+            merge_application_id = data["id"]
+            merge_linked_account_id = data["linked_account"]["id"]
             
             # Get required data
             job_desc = self._get_job_description(merge_linked_account_id, merge_job_id)
