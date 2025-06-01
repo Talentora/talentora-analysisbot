@@ -43,6 +43,6 @@ def visualize_resume_analysis(results):
 
 if __name__ == '__main__':
     # Assuming results are passed directly from the analysis
-    from app.test.test_resume_analysis import create_sample_resumes
+    from app.test.test_resumes.test_resume_analysis import create_sample_resumes
     results = create_sample_resumes()  # Get results from the analysis
     visualize_resume_analysis(results)  # Visualize the results 
