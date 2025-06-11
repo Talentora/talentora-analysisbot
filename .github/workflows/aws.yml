@@ -1,0 +1,50 @@
+name: Deploy Staging → EC2 (git-pull style)
+
+on:
+  push:
+    branches:
+      - staging
+
+env:
+  SSH_HOST: ${{ secrets.EC2_HOST }}
+  SSH_USER: ${{ secrets.EC2_USER }}
+  APP_DIR:  ${{ secrets.EC2_APP_DIR }}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+
+      - name: SSH → build & deploy Docker container
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host:     ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key:      ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ${{ secrets.EC2_APP_DIR }}
+            IMAGE_TAG=${{ github.sha }}
+
+            # build a fresh image (tag as "latest" or include the SHA)
+            docker build -t talentora-analysis:$IMAGE_TAG .
+
+            # stop & remove any running container named "myapp"
+            if docker ps -q --filter "name=talentora-analysis" | grep -q .; then
+              docker stop talentora-analysis
+            fi
+            if docker ps -aq --filter "name=talentora-analysis" | grep -q .; then
+              docker rm talentora-analysis
+            fi
+
+            # run it in detached mode, restart on failure, mapping port 8000
+            docker run -d \
+              --name talentora-analysis \
+              --restart unless-stopped \
+              -p 8000:8000 \
+              talentora-analysis:$IMAGE_TAG
